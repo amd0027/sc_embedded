@@ -1,0 +1,17 @@
+<!DOCTYPE HTML>
+<head>
+   <link rel="stylesheet" href="/puremin.css">
+   <script>/*Adapted from http://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript*/
+   function getParameterByName(name, url) {if (!url) {url = window.location.href;}name = name.replace(/[\\[\\]]/g, "\\\\$&");var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),results = regex.exec(url);if (!results) return null;if (!results[2]) return '';return decodeURIComponent(results[2].replace(/\\+/g, " "));}</script>
+   <title>Smart Chair Web</title>
+</head>
+<body>
+   <div style="text-align: center; width: 100%;">
+      <h2>
+         Operation Completed
+      </h2>
+      <span id="msg"></span><br /><br /><a class="pure-button" href="/">Continue</a>
+   </div>
+   <script>document.getElementById("msg").innerHTML = decodeURIComponent(getParameterByName("err"));</script>
+</body>
+</html>

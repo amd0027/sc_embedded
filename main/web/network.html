@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<head>
+   <meta name="viewport" content="width=device-width, initial-scale=1" />
+   <link rel="stylesheet" href="/puremin.css">
+   <title>Network Settings</title>
+</head>
+<body>
+   <div class="pure-menu pure-menu-horizontal" style="background-color: black; color: white; height: 2.2em;">
+      <a href="#" class="pure-menu-heading pure-menu-link">Smart Chair Web</a>
+      <ul class="pure-menu-list">
+         <li class="pure-menu-item pure-menu-has-children pure-menu-allow-hover">
+            <a href="#" class="pure-menu-link">System</a>
+            <ul class="pure-menu-children">
+               <li class="pure-menu-item"><a href="info.html" class="pure-menu-link">Information</a></li>
+               <li class="pure-menu-item"><a href="update.html" class="pure-menu-link">Firmware Update</a></li>
+            </ul>
+         </li>
+         <li class="pure-menu-item pure-menu-has-children pure-menu-allow-hover">
+            <a href="#" class="pure-menu-link">Settings</a>
+            <ul class="pure-menu-children">
+               <li class="pure-menu-item"><a href="network.html" class="pure-menu-link">Network</a></li>
+            </ul>
+         </li>
+      </ul>
+   </div>
+   <div id="body" style="position: absolute; top: 40px; left: 0px; right: 0px; bottom: 0px; overflow-y: scroll; text-align: center;">
+      <h2>Network Settings</h2>
+      <form method="post" action="setnetwork" class="pure-form pure-form-aligned">
+         <div class="pure-control-group"><label for="txtssid">SSID:</label><input id="txtssid" name="ssid" type="text">    </div>
+         <div class="pure-control-group"><label for="pw">Password:</label><input name="pw" type="text">    </div>
+		 <input type="hidden" name="dummypaddingdata">
+         <br />    <input type="submit" value="Save Settings" class="pure-button">
+      </form>
+   </div>
+</body>
+</html>
