@@ -64,7 +64,6 @@ bool config_load()
 
 		// Read the stored Wifi SSID
 		err = nvs_get_str(nvs, "wifi_ssid", NULL, &required_size);
-		//config->wifi_ssid = malloc(required_size);
 		nvs_get_str(nvs, "wifi_ssid", config->wifi_ssid, &required_size);
 
 		switch (err) {
@@ -81,7 +80,6 @@ bool config_load()
 
 		// Read the stored Wifi Password
 		nvs_get_str(nvs, "wifi_pass", NULL, &required_size);
-		//config->wifi_pass = malloc(required_size);
 		nvs_get_str(nvs, "wifi_pass", config->wifi_pass, &required_size);
 		switch (err) {
 			case ESP_OK:
@@ -89,6 +87,21 @@ bool config_load()
 				break;
 			case ESP_ERR_NVS_NOT_FOUND:
 				ESP_LOGW(TAG, "Password not found in NVS");
+				return false;
+			default:
+				ESP_LOGE(TAG, "Error (%s) reading!", esp_err_to_name(err));
+				return false;
+		}
+
+		// Read the stored Authorization Key
+		nvs_get_str(nvs, "auth_key", NULL, &required_size);
+		nvs_get_str(nvs, "auth_key", config->auth_key, &required_size);
+		switch (err) {
+			case ESP_OK:
+				ESP_LOGD(TAG, "Auth_Key read from NVS OK");
+				break;
+			case ESP_ERR_NVS_NOT_FOUND:
+				ESP_LOGW(TAG, "Auth_Key not found in NVS");
 				return false;
 			default:
 				ESP_LOGE(TAG, "Error (%s) reading!", esp_err_to_name(err));
@@ -138,6 +151,14 @@ bool config_save()
 		if (err != ESP_OK)
 		{
 			ESP_LOGE(TAG, "Failed to write Wifi Password to NVS");
+			success = false;
+		}
+
+		// Write the AuthKey
+		err = nvs_set_str(nvs, "auth_key", config->auth_key);
+		if (err != ESP_OK)
+		{
+			ESP_LOGE(TAG, "Failed to write auth_key to NVS");
 			success = false;
 		}
 

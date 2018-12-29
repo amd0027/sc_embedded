@@ -39,7 +39,7 @@ esp_err_t network_get_handler(httpd_req_t *req)
 	int len = network_end - network_start;
 
     httpd_resp_set_type(req, "text/html");
-    httpd_resp_send(req, network_start, -1);
+    httpd_resp_send(req, network_start, len);
 
     return ESP_OK;
 }
@@ -54,7 +54,6 @@ esp_err_t info_get_handler(httpd_req_t *req)
 {
 	extern const char index_start[] asm("_binary_info_html_start");
 	extern const char index_end[]   asm("_binary_info_html_end");
-	int len = index_end - index_start;
 
 	char* response = render_info_page(index_start);
 
