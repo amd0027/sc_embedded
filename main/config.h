@@ -15,6 +15,7 @@ struct sc_config_t
 	char wifi_ssid[32];
 	char wifi_pass[64];
 
+	char auth_key[37];
 	//TODO: more items and stuff
 };
 
