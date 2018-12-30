@@ -1,0 +1,5 @@
+Using LetsEncrypt on the API and storing their Root/Intermediate CA cert in the embedded FW might not
+be a good idea. Similar devices (like Nest thermostats) use private certificates with long expirations
+
+No authentication on web administration 
+
