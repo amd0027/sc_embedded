@@ -12,13 +12,8 @@
             <a href="#" class="pure-menu-link">System</a>
             <ul class="pure-menu-children">
                <li class="pure-menu-item"><a href="info.html" class="pure-menu-link">Information</a></li>
-               <li class="pure-menu-item"><a href="update.html" class="pure-menu-link">Firmware Update</a></li>
-            </ul>
-         </li>
-         <li class="pure-menu-item pure-menu-has-children pure-menu-allow-hover">
-            <a href="#" class="pure-menu-link">Settings</a>
-            <ul class="pure-menu-children">
-               <li class="pure-menu-item"><a href="network.html" class="pure-menu-link">Network</a></li>
+			   <li class="pure-menu-item"><a href="network.html" class="pure-menu-link">Network Settings</a></li>
+               <li class="pure-menu-item"><a href="pairing.html" class="pure-menu-link">Pairing</a></li>
             </ul>
          </li>
       </ul>
@@ -27,7 +22,7 @@
       <h2>Network Settings</h2>
       <form method="post" action="setnetwork" class="pure-form pure-form-aligned">
          <div class="pure-control-group"><label for="txtssid">SSID:</label><input id="txtssid" name="ssid" type="text">    </div>
-         <div class="pure-control-group"><label for="pw">Password:</label><input name="pw" type="text">    </div>
+         <div class="pure-control-group"><label for="pw">Password:</label><input name="pw" type="password">    </div>
 		 <input type="hidden" name="dummypaddingdata">
          <br />    <input type="submit" value="Save Settings" class="pure-button">
       </form>
