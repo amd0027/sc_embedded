@@ -10,5 +10,6 @@ COMPONENT_EMBED_TXTFILES += web/css/puremin.css
 COMPONENT_EMBED_TXTFILES += web/info.html
 COMPONENT_EMBED_TXTFILES += web/network.html
 COMPONENT_EMBED_TXTFILES += web/done.html
+COMPONENT_EMBED_TXTFILES += web/pairing.html
 
 COMPONENT_SRCDIRS = . api/

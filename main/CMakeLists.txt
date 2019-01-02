@@ -7,7 +7,8 @@ set(COMPONENT_EMBED_TXTFILES
 		"web/css/puremin.css"
 		"web/info.html"
 		"web/network.html"
-		"web/done.html")
+		"web/done.html"
+		"web/pairing.html")
 
 
 register_component()
