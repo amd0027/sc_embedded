@@ -6,6 +6,7 @@
 
 #include "SCController.h"
 
+#include <string>
 #include <cstring>
 
 #include <freertos/FreeRTOS.h>
@@ -40,8 +41,6 @@ void SCController::Start()
 	InitWifi();
 	webserver.Start();
 
-	printf("Hello world!\n");
-
 	/* Print chip information */
 	esp_chip_info_t chip_info;
 	esp_chip_info(&chip_info);
@@ -55,8 +54,27 @@ void SCController::Start()
 	printf("%dMB %s flash\n", spi_flash_get_chip_size() / (1024 * 1024),
 			(chip_info.features & CHIP_FEATURE_EMB_FLASH) ? "embedded" : "external");
 
+	if (settings.auth_key.empty())
+	{
+		ESP_LOGI(TAG, "No authkey configured for this device");
+	}
+	else
+	{
+		ESP_LOGI(TAG, "The authkey configured for this device is %s", settings.auth_key.c_str());
+	}
 
-	xTaskCreate(this->ApplicationTaskImpl, "application_task", 8192, NULL, 5, NULL);
+	ESP_LOGI(TAG, "Waiting for WiFi to Connect");
+    xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT, false, true, portMAX_DELAY);
+
+    ESP_LOGI(TAG, "Checking for available firmware update");
+    SCOTAUpdate::RunUpdateCheck();
+
+    while(1)
+    {
+    	vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
+
+	//xTaskCreate(this->ApplicationTaskImpl, "application_task", 8192, NULL, 5, NULL);
 }
 
 void SCController::InitWifi()
@@ -87,16 +105,7 @@ void SCController::InitWifi()
 
 void SCController::ApplicationTask()
 {
-	ESP_LOGI(TAG, "Waiting for WiFi to Connect");
-    xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT, false, true, portMAX_DELAY);
 
-    ESP_LOGI(TAG, "Checking for available firmware update");
-    SCOTAUpdate::RunUpdateCheck();
-
-    while(1)
-    {
-    	vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
 }
 
 /*static*/ esp_err_t SCController::event_handler(void *ctx, system_event_t *event)
