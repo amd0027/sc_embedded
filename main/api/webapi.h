@@ -16,10 +16,15 @@
 namespace webapi
 {
 
+	/*------Website Pages URLs----------------------------------------------*/
+	#define WEB_USER_CHAIR_PAIRING	"http://microcube.info/Chair/Pair?pairingCode="
+
 	/*------Web API Endpoint URLs-------------------------------------------*/
 	#define WEB_API_BASE_URL 			"https://microcube.info/api/"
 	#define WEB_API_UPDATE_CHECK_URL	"PairingOperations/GetLatestVersion"
 	#define WEB_API_GET_PAIRING_CODE	"PairingOperations/GetPairingCode/"
+	#define WEB_API_GET_PAIRING_STATUS	"PairingOperations/GetPairingStatus/"
+	#define WEB_API_GET_FINISH_PAIRING	"PairingOperations/FinishPairing/"
 
 	/*------Web API Macros--------------------------------------------------*/
 	#define API_GET_URL(op) WEB_API_BASE_URL "" op
@@ -33,9 +38,8 @@ namespace webapi
 	/*------Web API Helper Function Prototype Defines-------------------------*/
 	char* APIGetResponse(const char* url);
 	char* APIGetResponse(const char* url, int& outStatusCode);
-	char* api_get_response(const char* url);
-	std::string mac_to_string(uint8_t mac_data[]);
-	std::string api_calculate_uuid();
+	std::string MacToString(uint8_t macData[], bool includeSeperators = true);
+	std::string APICalculateUUID();
 
 	esp_err_t api_http_event_handler(esp_http_client_event_t* evt);
 }

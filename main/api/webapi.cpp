@@ -104,14 +104,18 @@ namespace webapi
 		return response_data;
 	}
 
-	std::string mac_to_string(uint8_t mac_data[])
+	std::string MacToString(uint8_t macData[], bool includeSeperators /*= true*/)
 	{
 		std::stringstream os;
 		char oldFill = os.fill('0');
 
-		os << std::setw(2) << std::hex << static_cast<unsigned int>(mac_data[0]);
+		os << std::setw(2) << std::hex << static_cast<unsigned int>(macData[0]);
 		for (uint i = 1; i < 6; i++) {
-			os << ':' << std::setw(2) << std::hex << std::uppercase << static_cast<unsigned int>(mac_data[i]);
+			if (includeSeperators)
+			{
+				os << ':';
+			}
+			os << std::setw(2) << std::hex << std::uppercase << static_cast<unsigned int>(macData[i]);
 		}
 
 		os.fill(oldFill);
@@ -119,15 +123,15 @@ namespace webapi
 		return os.str();
 	}
 
-	std::string api_calculate_uuid()
+	std::string APICalculateUUID()
 	{
 		uint8_t mac[6];
 		esp_wifi_get_mac(ESP_IF_WIFI_STA, mac);
-		std::string mac_string = mac_to_string(mac);
+		std::string macString = MacToString(mac, false);
 
 		// TODO: add some more stuff on the end of the MAC to form the UUID
 
-		return mac_string;
+		return macString;
 	}
 
 } /*webapi::*/
