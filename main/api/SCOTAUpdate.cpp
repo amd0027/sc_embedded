@@ -41,7 +41,7 @@ void SCOTAUpdate::RunUpdateCheck()
 // If an update is available, the URL of the firmware blob is returned
 char* SCOTAUpdate::GetUpdateUrl()
 {
-	char* latest_version_data = webapi::api_get_response(API_GET_URL(WEB_API_UPDATE_CHECK_URL));
+	char* latest_version_data = webapi::APIGetResponse(API_GET_URL(WEB_API_UPDATE_CHECK_URL));
 
 	cJSON* response = cJSON_Parse(latest_version_data);
 	if (response == NULL)
