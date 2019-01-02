@@ -6,7 +6,7 @@
 COMPONENT_EMBED_TXTFILES := certs/cacert.pem
 COMPONENT_EMBED_TXTFILES += certs/prvtkey.pem
 COMPONENT_EMBED_TXTFILES += certs/api_ca_cert.pem
-COMPONENT_EMBED_TXTFILES += css/puremin.css
+COMPONENT_EMBED_TXTFILES += web/css/puremin.css
 COMPONENT_EMBED_TXTFILES += web/info.html
 COMPONENT_EMBED_TXTFILES += web/network.html
 COMPONENT_EMBED_TXTFILES += web/done.html
