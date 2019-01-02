@@ -31,6 +31,8 @@ namespace webapi
 
 
 	/*------Web API Helper Function Prototype Defines-------------------------*/
+	char* APIGetResponse(const char* url);
+	char* APIGetResponse(const char* url, int& outStatusCode);
 	char* api_get_response(const char* url);
 	std::string mac_to_string(uint8_t mac_data[]);
 	std::string api_calculate_uuid();

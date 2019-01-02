@@ -54,7 +54,13 @@ namespace webapi
 		return ESP_OK;
 	}
 
-	char* api_get_response(const char* url)
+	char* APIGetResponse(const char* url)
+	{
+		int statusCode;
+		return APIGetResponse(url, statusCode);
+	}
+
+	char* APIGetResponse(const char* url, int& outStatusCode)
 	{
 		ESP_LOGI(TAG, "API: %s", url);
 
@@ -73,6 +79,8 @@ namespace webapi
 			ESP_LOGI(TAG, "HTTPS Status = %d, content_length = %d",
 					esp_http_client_get_status_code(client),
 					esp_http_client_get_content_length(client));
+
+			outStatusCode = esp_http_client_get_status_code(client);
 
 			int response_length = esp_http_client_get_content_length(client);
 			response_data = (char*)malloc(response_length + 1);
