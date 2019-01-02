@@ -234,7 +234,7 @@ const httpd_uri_t setnetwork = {
 const httpd_uri_t root = {
     .uri       = "/",
     .method    = HTTP_GET,
-    .handler   = network_get_handler,
+    .handler   = info_get_handler,
 	.user_ctx = NULL
 };
 
