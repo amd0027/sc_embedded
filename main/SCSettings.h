@@ -9,22 +9,29 @@
 
 #include <string>
 
+#include <nvs_flash.h>
 #include <esp_err.h>
 
 class SCSettings
 {
 public:
-	char wifi_ssid[32];
-	char wifi_pass[64];
+	std::string wifi_ssid;
+	std::string wifi_pass;
 
-	char auth_key[37];
+	std::string auth_key;
 	//TODO: more items and stuff
 
+	SCSettings();
 	bool Load();
+	bool LoadSetting(const char* keyName, std::string& result);
 	bool Save();
 
 private:
-	esp_err_t InitFlash();
+	nvs_handle nvs;
+	esp_err_t nvsStatus;
+
+	void InitFlash();
+
 };
 
 #endif /*SCSETTINGS_H*/

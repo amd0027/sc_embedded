@@ -146,8 +146,8 @@ esp_err_t setnetwork_post_handler(httpd_req_t *req)
 			pw_len > 0 && pw_len < 33)
 	{
 		// valid entries submitted
-		strcpy(config.wifi_ssid, ssid.c_str());
-		strcpy(config.wifi_pass, pw.c_str());
+		config.wifi_ssid = ssid;
+		config.wifi_pass = pw;
 		config.Save();
 
 		httpd_resp_set_hdr(req, "Location", "/done.html?err=Rebooting%20Now");

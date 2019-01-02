@@ -16,110 +16,67 @@
 
 static const char* TAG = "config";
 
-esp_err_t SCSettings::InitFlash()
+SCSettings::SCSettings():
+		wifi_ssid(),
+		wifi_pass(),
+		auth_key()
 {
-	//Initialize NVS
-	esp_err_t ret = nvs_flash_init();
-	if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-		ESP_ERROR_CHECK(nvs_flash_erase());
-		ret = nvs_flash_init();
-	}
-	ESP_ERROR_CHECK(ret);
-
-	return ret;
+	InitFlash();
 }
 
 bool SCSettings::Load()
 {
-	esp_err_t err;
-	err = InitFlash();
-
-	ESP_LOGI(TAG, "Opening NVS to load config. data");
-	nvs_handle nvs;
-	err = nvs_open("storage", NVS_READWRITE, &nvs);
-
-	if (err != ESP_OK) {
-		ESP_LOGE(TAG, "Error opening NVS: (%s)", esp_err_to_name(err));
-
+	if (nvsStatus != ESP_OK)
+	{
 		return false;
 	}
 	else
 	{
 		ESP_LOGI(TAG, "Reading values from NVS");
-		std::size_t required_size;
+		bool success = true;
 
-		// Read the stored Wifi SSID
-		err = nvs_get_str(nvs, "wifi_ssid", NULL, &required_size);
-		nvs_get_str(nvs, "wifi_ssid", wifi_ssid, &required_size);
-
-		switch (err) {
-			case ESP_OK:
-				ESP_LOGD(TAG, "SSID read from NVS OK");
-				break;
-			case ESP_ERR_NVS_NOT_FOUND:
-				ESP_LOGW(TAG, "SSID not found in NVS");
-				return false;
-			default:
-				ESP_LOGE(TAG, "Error (%s) reading!", esp_err_to_name(err));
-				return false;
-		}
-
-		// Read the stored Wifi Password
-		nvs_get_str(nvs, "wifi_pass", NULL, &required_size);
-		nvs_get_str(nvs, "wifi_pass", wifi_pass, &required_size);
-		switch (err) {
-			case ESP_OK:
-				ESP_LOGD(TAG, "Password read from NVS OK");
-				break;
-			case ESP_ERR_NVS_NOT_FOUND:
-				ESP_LOGW(TAG, "Password not found in NVS");
-				return false;
-			default:
-				ESP_LOGE(TAG, "Error (%s) reading!", esp_err_to_name(err));
-				return false;
-		}
-
-		// Read the stored Authorization Key
-		nvs_get_str(nvs, "auth_key", NULL, &required_size);
-		nvs_get_str(nvs, "auth_key", auth_key, &required_size);
-		switch (err) {
-			case ESP_OK:
-				ESP_LOGD(TAG, "Auth_Key read from NVS OK");
-				break;
-			case ESP_ERR_NVS_NOT_FOUND:
-				ESP_LOGW(TAG, "Auth_Key not found in NVS");
-				return false;
-			default:
-				ESP_LOGE(TAG, "Error (%s) reading!", esp_err_to_name(err));
-				return false;
-		}
+		success |= LoadSetting("wifi_ssid", this->wifi_ssid);
+		success |= LoadSetting("wifi_pass", this->wifi_pass);
+		success |= LoadSetting("auth_key", this->auth_key);
 
 		return true;
 	}
 }
 
+bool SCSettings::LoadSetting(const char* keyName, std::string& result)
+{
+	size_t bufferSize = 100;
+	char buffer[bufferSize];
+
+	esp_err_t err = nvs_get_str(nvs, keyName, buffer, &bufferSize);
+	switch (err) {
+		case ESP_OK:
+			ESP_LOGI(TAG, "%s read from NVS OK", keyName);
+			result = std::string(buffer);
+			return true;
+		case ESP_ERR_NVS_NOT_FOUND:
+			ESP_LOGI(TAG, "%s not found in NVS", keyName);
+			return false;
+		default:
+			ESP_LOGE(TAG, "Error (%s) reading!", esp_err_to_name(err));
+			return false;;
+	}
+}
+
 bool SCSettings::Save()
 {
-	esp_err_t err;
-	err = InitFlash();
-
-	ESP_LOGI(TAG, "Opening NVS to load config. data");
-	nvs_handle nvs;
-	err = nvs_open("storage", NVS_READWRITE, &nvs);
-
-	if (err != ESP_OK) {
-		ESP_LOGE(TAG, "Error opening NVS: (%s)", esp_err_to_name(err));
-
+	if (nvsStatus != ESP_OK) {
 		return false;
 	}
 	else
 	{
+		esp_err_t err;
 		bool success = true;
 
 		ESP_LOGI(TAG, "Writing values to NVS");
 
 		// Write the Wifi SSID
-		err = nvs_set_str(nvs, "wifi_ssid", wifi_ssid);
+		err = nvs_set_str(nvs, "wifi_ssid", wifi_ssid.c_str());
 		if (err != ESP_OK)
 		{
 			ESP_LOGE(TAG, "Failed to write SSID to NVS");
@@ -127,7 +84,7 @@ bool SCSettings::Save()
 		}
 
 		// Write the Wifi SSID
-		err = nvs_set_str(nvs, "wifi_pass", wifi_pass);
+		err = nvs_set_str(nvs, "wifi_pass", wifi_pass.c_str());
 		if (err != ESP_OK)
 		{
 			ESP_LOGE(TAG, "Failed to write Wifi Password to NVS");
@@ -135,7 +92,7 @@ bool SCSettings::Save()
 		}
 
 		// Write the AuthKey
-		err = nvs_set_str(nvs, "auth_key", auth_key);
+		err = nvs_set_str(nvs, "auth_key", auth_key.c_str());
 		if (err != ESP_OK)
 		{
 			ESP_LOGE(TAG, "Failed to write auth_key to NVS");
@@ -144,4 +101,27 @@ bool SCSettings::Save()
 
 		return success;
 	}
+}
+
+
+void SCSettings::InitFlash()
+{
+	//Initialize NVS
+	esp_err_t err = nvs_flash_init();
+	if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+		ESP_ERROR_CHECK(nvs_flash_erase());
+		err = nvs_flash_init();
+	}
+	ESP_ERROR_CHECK(err);
+
+	ESP_LOGI(TAG, "Opening NVS for configuration data");
+
+	err = nvs_open("storage", NVS_READWRITE, &nvs);
+
+	if (err != ESP_OK) {
+		ESP_LOGE(TAG, "Error opening NVS: (%s)", esp_err_to_name(err));
+
+	}
+
+	nvsStatus = err;
 }

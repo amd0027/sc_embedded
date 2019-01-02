@@ -30,8 +30,8 @@ void SCWifi::ConnectSTAWifi(bool delay_init)
 
 		wifi_config_t wifi_config_sta = { };
 
-		memcpy(wifi_config_sta.sta.ssid, configuration.wifi_ssid, 64);
-		memcpy(wifi_config_sta.sta.password, configuration.wifi_pass, 32);
+		memcpy(wifi_config_sta.sta.ssid, configuration.wifi_ssid.c_str(), 64);
+		memcpy(wifi_config_sta.sta.password, configuration.wifi_pass.c_str(), 32);
 
 		ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config_sta));
 
