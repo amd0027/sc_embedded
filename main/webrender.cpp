@@ -55,7 +55,7 @@ namespace webrender
 		// MAC Address
 		uint8_t mac[6];
 		esp_wifi_get_mac(ESP_IF_WIFI_STA, mac);
-		std::string mac_string = webapi::mac_to_string(mac);
+		std::string mac_string = webapi::MacToString(mac);
 
 		// Firmware Version
 		const esp_app_desc_t *app_desc = esp_ota_get_app_description();
@@ -64,6 +64,21 @@ namespace webrender
 		source.replace(source.find("{IPADDRESS}"), std::string("{IPADDRESS}").size(), ip_string);
 		source.replace(source.find("{MACADDRESS}"), std::string("{MACADDRESS}").size(), mac_string);
 		source.replace(source.find("{SWVERSION}"), std::string("{SWVERSION}").size(), sw_version);
+
+		return source;
+	}
+
+	std::string RenderPairingPage(const char* pageTemplate, std::string pairingKey)
+	{
+		std::string source(pageTemplate);
+
+		std::string userPairingLink(WEB_USER_CHAIR_PAIRING);
+		userPairingLink += pairingKey;
+
+		// TODO: put the URL in
+		source.replace(source.find("{PAIRINGCODE}"), std::string("{PAIRINGCODE}").size(), pairingKey);
+		source.replace(source.find("{SMARTCHAIRURL}"), std::string("{SMARTCHAIRURL}").size(), userPairingLink); // the hyperlink
+		source.replace(source.find("{SMARTCHAIRURL}"), std::string("{SMARTCHAIRURL}").size(), userPairingLink); // the popup link
 
 		return source;
 	}

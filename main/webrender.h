@@ -13,6 +13,7 @@ namespace webrender
 {
 	std::string ParsePostData(char* sourceData, std::string key);
 	std::string RenderInfoPage(const char* pageTemplate);
+	std::string RenderPairingPage(const char* pageTemplate, std::string pairingKey);
 }
 
 

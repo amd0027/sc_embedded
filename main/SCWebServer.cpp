@@ -28,6 +28,7 @@ extern "C"
 #include "SCSettings.h"
 #include "SCWifi.h"
 #include "webrender.h"
+#include "api/SCPairing.h"
 
 SCWebServer::SCWebServer():
 		server(NULL)
@@ -111,6 +112,60 @@ const httpd_uri_t done = {
 	.user_ctx = NULL
 };
 
+esp_err_t pairing_handler(httpd_req_t *req)
+{
+	extern const char pairing_start[] asm("_binary_pairing_html_start");
+	SCSettings config;
+	config.Load();
+
+	if (!config.auth_key.empty())
+	{
+		httpd_resp_set_hdr(req, "Location", "/done.html?err=This%20Chair%20Is%20Already%20Paired");
+		httpd_resp_set_status(req, "302");
+		httpd_resp_send(req, "", 0);
+
+		return ESP_OK;
+	}
+
+	static SCPairing pairing;
+	if (!pairing.HasPairingBegun())
+	{
+		pairing.BeginPairing();
+	}
+	else
+	{
+		pairing.PollPairingStatus();
+	}
+
+	if (pairing.IsPairingComplete())
+	{
+		pairing.FinishPairing();
+
+		config.auth_key = pairing.GetAuthKey();
+		config.Save();
+
+		httpd_resp_set_hdr(req, "Location", "/done.html?err=Pairing%20Completed%20Successfully");
+		httpd_resp_set_status(req, "302");
+		httpd_resp_send(req, "", 0);
+	}
+	else
+	{
+		std::string response = webrender::RenderPairingPage(pairing_start, pairing.GetPairingKey());
+
+		httpd_resp_set_type(req, "text/html");
+		httpd_resp_send(req, response.c_str(), -1);
+	}
+
+    return ESP_OK;
+}
+
+const httpd_uri_t pairing = {
+    .uri       = "/pairing.html",
+    .method    = HTTP_GET,
+    .handler   = pairing_handler,
+	.user_ctx = NULL
+};
+
 
 esp_err_t setnetwork_post_handler(httpd_req_t *req)
 {
@@ -176,14 +231,12 @@ const httpd_uri_t setnetwork = {
 };
 
 
-
 const httpd_uri_t root = {
     .uri       = "/",
     .method    = HTTP_GET,
     .handler   = network_get_handler,
 	.user_ctx = NULL
 };
-
 
 void SCWebServer::Start()
 {
@@ -252,6 +305,7 @@ void SCWebServer::Start()
     httpd_register_uri_handler(server, &root);
     httpd_register_uri_handler(server, &info);
     httpd_register_uri_handler(server, &network);
+    httpd_register_uri_handler(server, &pairing);
 
     httpd_register_uri_handler(server, &done);
 
