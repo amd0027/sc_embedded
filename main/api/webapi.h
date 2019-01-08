@@ -17,7 +17,7 @@ namespace webapi
 {
 
 	/*------Website Pages URLs----------------------------------------------*/
-	#define WEB_USER_CHAIR_PAIRING	"http://microcube.info/Chair/Pair?pairingCode="
+	#define WEB_USER_CHAIR_PAIRING	"http://uahsmartchair.com/Chair/Pair?pairingCode="
 
 	/*------Web API Endpoint URLs-------------------------------------------*/
 	#define WEB_API_BASE_URL 			"https://microcube.info/api/"
