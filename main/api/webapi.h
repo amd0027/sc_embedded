@@ -20,7 +20,7 @@ namespace webapi
 	#define WEB_USER_CHAIR_PAIRING	"http://uahsmartchair.com/Chair/Pair?pairingCode="
 
 	/*------Web API Endpoint URLs-------------------------------------------*/
-	#define WEB_API_BASE_URL 			"https://microcube.info/api/"
+	#define WEB_API_BASE_URL 			"https://uahsmartchair.com/api/"
 	#define WEB_API_UPDATE_CHECK_URL	"PairingOperations/GetLatestVersion"
 	#define WEB_API_GET_PAIRING_CODE	"PairingOperations/GetPairingCode/"
 	#define WEB_API_GET_PAIRING_STATUS	"PairingOperations/GetPairingStatus/"
