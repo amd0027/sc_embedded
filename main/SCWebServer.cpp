@@ -166,6 +166,63 @@ const httpd_uri_t pairing = {
 	.user_ctx = NULL
 };
 
+esp_err_t wifi_wait_handler(httpd_req_t *req)
+{
+	extern const char wifiwait_start[] 	asm("_binary_wifiwait_html_start");
+	extern const char wifiwait_end[] 	asm("_binary_wifiwait_html_end");
+	int len = wifiwait_end - wifiwait_start;
+
+	// Get STA(wifi client) IP address
+	char ip_chars[20];
+	tcpip_adapter_ip_info_t ipInfo;
+	tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &ipInfo);
+	snprintf(ip_chars, 20, IPSTR, IP2STR(&ipInfo.ip));
+	std::string ip_string(ip_chars);
+
+	if (ip_string == "0.0.0.0")
+	{
+		httpd_resp_set_type(req, "text/html");
+		httpd_resp_send(req, wifiwait_start, len);
+	}
+	else
+	{
+		std::string destUrl = "/wifidone.html?ip=";
+		destUrl += ip_string;
+
+		httpd_resp_set_hdr(req, "Location", destUrl.c_str());
+		httpd_resp_set_status(req, "302");
+		httpd_resp_send(req, "", 0);
+	}
+
+    return ESP_OK;
+}
+
+const httpd_uri_t wifiwait = {
+    .uri       = "/wifiwait.html",
+    .method    = HTTP_GET,
+    .handler   = wifi_wait_handler,
+	.user_ctx = NULL
+};
+
+esp_err_t wifi_done_handler(httpd_req_t *req)
+{
+	extern const char wifidone_start[] 	asm("_binary_wifidone_html_start");
+	extern const char wifidone_end[] 	asm("_binary_wifidone_html_end");
+	int len = wifidone_end - wifidone_start;
+
+	httpd_resp_set_type(req, "text/html");
+	httpd_resp_send(req, wifidone_start, len);
+
+    return ESP_OK;
+}
+
+const httpd_uri_t wifidone = {
+    .uri       = "/wifidone.html",
+    .method    = HTTP_GET,
+    .handler   = wifi_done_handler,
+	.user_ctx = NULL
+};
+
 
 esp_err_t setnetwork_post_handler(httpd_req_t *req)
 {
@@ -205,7 +262,7 @@ esp_err_t setnetwork_post_handler(httpd_req_t *req)
 		config.wifi_pass = pw;
 		config.Save();
 
-		httpd_resp_set_hdr(req, "Location", "/done.html?err=Rebooting%20Now");
+		httpd_resp_set_hdr(req, "Location", "/wifiwait.html");
 		httpd_resp_set_status(req, "302");
 		httpd_resp_send(req, "", 0);
 
@@ -261,7 +318,7 @@ void SCWebServer::Start()
     conf.httpd.server_port        = 0;
     conf.httpd.ctrl_port          = 32768;
     conf.httpd.max_open_sockets   = 4;
-    conf.httpd.max_uri_handlers   = 8;
+    conf.httpd.max_uri_handlers   = 10;
     conf.httpd.max_resp_headers   = 8;
     conf.httpd.backlog_conn       = 5;
     conf.httpd.lru_purge_enable   = true;
@@ -306,6 +363,8 @@ void SCWebServer::Start()
     httpd_register_uri_handler(server, &info);
     httpd_register_uri_handler(server, &network);
     httpd_register_uri_handler(server, &pairing);
+    httpd_register_uri_handler(server, &wifiwait);
+    httpd_register_uri_handler(server, &wifidone);
 
     httpd_register_uri_handler(server, &done);
 
