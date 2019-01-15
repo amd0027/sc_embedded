@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<head>
+   <link rel="stylesheet" href="/puremin.css">
+   <script>/*Adapted from http://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript*/
+   function getParameterByName(name, url) {if (!url) {url = window.location.href;}name = name.replace(/[\\[\\]]/g, "\\\\$&");var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),results = regex.exec(url);if (!results) return null;if (!results[2]) return '';return decodeURIComponent(results[2].replace(/\\+/g, " "));}</script>
+   <title>Smart Chair Web</title>
+</head>
+<body>
+   <div style="text-align: center; width: 100%;">
+      <h2>
+         The Smart Chair has successfully connected to your Wi-Fi network. Please disconnect this device from the 'Smart Chair' setup network, and connect to your regular home network.
+		 <br /><br />
+		 Once you have switched back to your regular home Wi-Fi network, click the 'Continue' button below:
+      </h2>
+      <br /><br /><a id="btnContinue" class="pure-button" href="/">Continue</a>
+   </div>
+   <script>document.getElementById("btnContinue").href = "https://" + decodeURIComponent(getParameterByName("ip"));</script>
+</body>
+</html>
