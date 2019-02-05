@@ -223,6 +223,25 @@ const httpd_uri_t wifidone = {
 	.user_ctx = NULL
 };
 
+esp_err_t factory_reset_get_handler(httpd_req_t *req)
+{
+	extern const char freset_start[] 	asm("_binary_reset_html_start");
+	extern const char freset_end[] 	asm("_binary_reset_html_end");
+	int len = freset_end - freset_start;
+
+	httpd_resp_set_type(req, "text/html");
+	httpd_resp_send(req, freset_start, len);
+
+    return ESP_OK;
+}
+
+const httpd_uri_t factoryreset = {
+    .uri       = "/reset.html",
+    .method    = HTTP_GET,
+    .handler   = factory_reset_get_handler,
+	.user_ctx = NULL
+};
+
 
 esp_err_t setnetwork_post_handler(httpd_req_t *req)
 {
@@ -287,6 +306,32 @@ const httpd_uri_t setnetwork = {
     .user_ctx = NULL
 };
 
+esp_err_t setfactoryreset_post_handler(httpd_req_t *req)
+{
+	SCSettings config;
+	config.Load();
+
+	config.wifi_ssid = "";
+	config.wifi_pass = "";
+	config.auth_key = "";
+
+	config.Save();
+
+	httpd_resp_set_hdr(req, "Location", "/done.html?err=Done");
+	httpd_resp_set_status(req, "302");
+	httpd_resp_send(req, "", 0);
+
+	esp_restart();
+
+    return ESP_OK;
+}
+
+const httpd_uri_t setfactoryreset = {
+    .uri       = "/setfactoryreset",
+    .method   = HTTP_POST,
+    .handler  = setfactoryreset_post_handler,
+    .user_ctx = NULL
+};
 
 const httpd_uri_t root = {
     .uri       = "/",
@@ -318,7 +363,7 @@ void SCWebServer::Start()
     conf.httpd.server_port        = 0;
     conf.httpd.ctrl_port          = 32768;
     conf.httpd.max_open_sockets   = 4;
-    conf.httpd.max_uri_handlers   = 10;
+    conf.httpd.max_uri_handlers   = 12;
     conf.httpd.max_resp_headers   = 8;
     conf.httpd.backlog_conn       = 5;
     conf.httpd.lru_purge_enable   = true;
@@ -365,12 +410,14 @@ void SCWebServer::Start()
     httpd_register_uri_handler(server, &pairing);
     httpd_register_uri_handler(server, &wifiwait);
     httpd_register_uri_handler(server, &wifidone);
+    httpd_register_uri_handler(server, &factoryreset);
 
     httpd_register_uri_handler(server, &done);
 
     httpd_register_uri_handler(server, &css_pure_min);
 
     httpd_register_uri_handler(server, &setnetwork);
+    httpd_register_uri_handler(server, &setfactoryreset);
 }
 
 void SCWebServer::Stop()
