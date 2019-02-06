@@ -14,6 +14,7 @@
 #include <string>
 #include <cstring>
 #include <algorithm>
+#include <cstdlib>
 
 #include <esp_system.h>
 #include <esp_wifi.h>
@@ -317,9 +318,11 @@ esp_err_t setfactoryreset_post_handler(httpd_req_t *req)
 
 	config.Save();
 
-	httpd_resp_set_hdr(req, "Location", "/done.html?err=Done");
+	httpd_resp_set_hdr(req, "Location", "https://uahsmartchair.com");
 	httpd_resp_set_status(req, "302");
 	httpd_resp_send(req, "", 0);
+
+	vTaskDelay(1000 / portTICK_PERIOD_MS);
 
 	esp_restart();
 
@@ -337,6 +340,47 @@ const httpd_uri_t root = {
     .uri       = "/",
     .method    = HTTP_GET,
     .handler   = info_get_handler,
+	.user_ctx = NULL
+};
+
+esp_err_t redirect_to_https_handler(httpd_req_t *req)
+{
+	// Retrieve the hostname the user has connected to
+	// from the HTTP Request Header 'Host' field, prepend
+	// 'https://', and redirect.
+
+	size_t buf_len;
+
+	buf_len = httpd_req_get_hdr_value_len(req, "Host") + 1;
+	if (buf_len == 0)
+	{
+		return ESP_FAIL;
+	}
+
+	char*  buf;
+	buf_len += 8; /*HTTPS:// => 8 characters*/
+	buf = (char*)malloc(buf_len);
+
+	memcpy(buf, "https://", 8);
+
+	char* hostStart = buf + 8;
+	if (httpd_req_get_hdr_value_str(req, "Host", hostStart, buf_len) != ESP_OK) {
+		return ESP_FAIL;
+	}
+
+	httpd_resp_set_hdr(req, "Location", buf);
+	httpd_resp_set_status(req, "302");
+	httpd_resp_send(req, "", 0);
+
+	free(buf);
+
+	return ESP_OK;
+}
+
+const httpd_uri_t redirecttohttps = {
+    .uri       = "/",
+    .method    = HTTP_GET,
+    .handler   = redirect_to_https_handler,
 	.user_ctx = NULL
 };
 
@@ -418,6 +462,39 @@ void SCWebServer::Start()
 
     httpd_register_uri_handler(server, &setnetwork);
     httpd_register_uri_handler(server, &setfactoryreset);
+
+    // initialize the HTTP web server (and set it to redirect to the HTTPs version)
+    httpd_config_t  nonsecureConf = { };
+
+    /*---Default Value Configuration from HTTPD_SSL_CONFIG_DEFAULT*/
+    nonsecureConf.task_priority      = tskIDLE_PRIORITY+5;
+    nonsecureConf.stack_size         = 2048;
+    nonsecureConf.server_port        = 80;
+    nonsecureConf.ctrl_port          = 4096;
+    nonsecureConf.max_open_sockets   = 1;
+    nonsecureConf.max_uri_handlers   = 1;
+    nonsecureConf.max_resp_headers   = 3;
+    nonsecureConf.backlog_conn       = 5;
+    nonsecureConf.lru_purge_enable   = true;
+    nonsecureConf.recv_wait_timeout  = 5;
+    nonsecureConf.send_wait_timeout  = 5;
+    nonsecureConf.global_user_ctx = NULL;
+    nonsecureConf.global_user_ctx_free_fn = NULL;
+    nonsecureConf.global_transport_ctx = NULL;
+    nonsecureConf.global_transport_ctx_free_fn = NULL;
+    nonsecureConf.open_fn = NULL;
+    nonsecureConf.close_fn = NULL;
+
+    ret = httpd_start(&nonsecureServer, &nonsecureConf);
+   	if (ESP_OK != ret)
+   	{
+		ESP_LOGI(TAG, "Error starting nonsecure server!");
+
+		nonsecureServer = NULL;
+		return;
+   	}
+
+   	httpd_register_uri_handler(nonsecureServer, &redirecttohttps);
 }
 
 void SCWebServer::Stop()

@@ -23,6 +23,7 @@ private:
 
 private:
 	httpd_handle_t server;
+	httpd_handle_t nonsecureServer;
 
 	static constexpr const char* TAG = "webserver";
 };
