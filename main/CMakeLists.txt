@@ -8,7 +8,8 @@ set(COMPONENT_EMBED_TXTFILES
 		"web/info.html"
 		"web/network.html"
 		"web/done.html"
-		"web/pairing.html")
+		"web/pairing.html"
+		"web/reset.html")
 
 
 register_component()

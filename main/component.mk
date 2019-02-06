@@ -13,5 +13,6 @@ COMPONENT_EMBED_TXTFILES += web/done.html
 COMPONENT_EMBED_TXTFILES += web/pairing.html
 COMPONENT_EMBED_TXTFILES += web/wifidone.html
 COMPONENT_EMBED_TXTFILES += web/wifiwait.html
+COMPONENT_EMBED_TXTFILES += web/reset.html
 
 COMPONENT_SRCDIRS = . api/
