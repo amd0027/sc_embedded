@@ -25,6 +25,7 @@ namespace webapi
 	#define WEB_API_GET_PAIRING_CODE	"PairingOperations/GetPairingCode/"
 	#define WEB_API_GET_PAIRING_STATUS	"PairingOperations/GetPairingStatus/"
 	#define WEB_API_GET_FINISH_PAIRING	"PairingOperations/FinishPairing/"
+	#define WEB_API_POST_HEARTRATE		"data/PostHeartRateData/"
 
 	/*------Web API Macros--------------------------------------------------*/
 	#define API_GET_URL(op) WEB_API_BASE_URL "" op
@@ -38,6 +39,8 @@ namespace webapi
 	/*------Web API Helper Function Prototype Defines-------------------------*/
 	char* APIGetResponse(const char* url);
 	char* APIGetResponse(const char* url, int& outStatusCode);
+	int APIPostData(const char* url, const char* postData, const char* authKey);
+
 	std::string MacToString(uint8_t macData[], bool includeSeperators = true);
 	std::string APICalculateUUID();
 
