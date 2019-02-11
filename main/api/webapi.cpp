@@ -99,6 +99,7 @@ namespace webapi
 			ESP_LOGE(TAG, "Error making API Get Call: %s", esp_err_to_name(err));
 		}
 
+		esp_http_client_close(client);
 		esp_http_client_cleanup(client);
 
 		return response_data;
@@ -136,6 +137,7 @@ namespace webapi
 			ESP_LOGE(TAG, "Error making API Get Call: %s", esp_err_to_name(err));
 		}
 
+		esp_http_client_close(client);
 		esp_http_client_cleanup(client);
 
 		return statusCode;
