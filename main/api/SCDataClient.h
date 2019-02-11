@@ -16,6 +16,8 @@ class SCDataClient {
 public:
 	SCDataClient(std::string key);
 	bool PostHeartRateData(HeartRateSensorModel data);
+	bool PostPostureData(PostureSensorModel data);
+	bool PostMotionData(MotionEventModel data);
 
 private:
 	static const std::string DATETIME_MIN_VALUE;
