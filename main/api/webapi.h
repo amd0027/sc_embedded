@@ -28,6 +28,7 @@ namespace webapi
 	#define WEB_API_POST_HEARTRATE		"data/PostHeartRateData/"
 	#define WEB_API_POST_POSTURE		"data/PostPostureData/"
 	#define WEB_API_POST_MOTION			"data/PostMotionData/"
+	#define WEB_API_POST_OCCUPANCY		"data/PostOccupancyData/"
 
 	/*------Web API Macros--------------------------------------------------*/
 	#define API_GET_URL(op) WEB_API_BASE_URL "" op
