@@ -24,7 +24,7 @@
 
 namespace webapi
 {
-	static const char *TAG = "api_defines";
+	static const char *TAG = "webapi";
 
 	esp_err_t api_http_event_handler(esp_http_client_event_t *evt)
 	{
