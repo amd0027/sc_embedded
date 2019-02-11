@@ -24,7 +24,7 @@
 
 namespace webapi
 {
-	static const char *TAG = "api_defines";
+	static const char *TAG = "webapi";
 
 	esp_err_t api_http_event_handler(esp_http_client_event_t *evt)
 	{
@@ -96,12 +96,51 @@ namespace webapi
 		}
 		else
 		{
-			ESP_LOGE(TAG, "Error checking for update: %s", esp_err_to_name(err));
+			ESP_LOGE(TAG, "Error making API Get Call: %s", esp_err_to_name(err));
 		}
 
+		esp_http_client_close(client);
 		esp_http_client_cleanup(client);
 
 		return response_data;
+	}
+
+	int APIPostData(const char* url, const char* postData, const char* authKey)
+	{
+		ESP_LOGI(TAG, "POST API: %s", url);
+
+		esp_http_client_config_t config = { };
+		config.url = url;
+		config.method = HTTP_METHOD_POST;
+		config.event_handler = api_http_event_handler;
+		config.cert_pem = API_CERT_PEM_START;
+
+		esp_http_client_handle_t client = esp_http_client_init(&config);
+		int postLen = strlen(postData);
+		esp_http_client_set_header(client, "Content-Type", "application/json");
+		esp_http_client_set_header(client, "X-AuthKey", authKey);
+		esp_http_client_set_post_field(client, postData, postLen);
+		esp_err_t err = esp_http_client_perform(client);
+
+		int statusCode = -1;
+
+		if (err == ESP_OK)
+		{
+			ESP_LOGI(TAG, "HTTPS Status = %d, content_length = %d",
+					esp_http_client_get_status_code(client),
+					esp_http_client_get_content_length(client));
+
+			statusCode = esp_http_client_get_status_code(client);
+		}
+		else
+		{
+			ESP_LOGE(TAG, "Error making API Get Call: %s", esp_err_to_name(err));
+		}
+
+		esp_http_client_close(client);
+		esp_http_client_cleanup(client);
+
+		return statusCode;
 	}
 
 	std::string MacToString(uint8_t macData[], bool includeSeperators /*= true*/)

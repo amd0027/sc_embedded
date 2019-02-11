@@ -4,8 +4,8 @@
  * Team Smart Chair - UAH CPE496 2019
 */
 
-#ifndef API_DEFINES_H
-#define API_DEFINES_H
+#ifndef WEB_API_H_
+#define WEB_API_H_
 
 
 #include <string>
@@ -25,6 +25,10 @@ namespace webapi
 	#define WEB_API_GET_PAIRING_CODE	"PairingOperations/GetPairingCode/"
 	#define WEB_API_GET_PAIRING_STATUS	"PairingOperations/GetPairingStatus/"
 	#define WEB_API_GET_FINISH_PAIRING	"PairingOperations/FinishPairing/"
+	#define WEB_API_POST_HEARTRATE		"data/PostHeartRateData/"
+	#define WEB_API_POST_POSTURE		"data/PostPostureData/"
+	#define WEB_API_POST_MOTION			"data/PostMotionData/"
+	#define WEB_API_POST_OCCUPANCY		"data/PostOccupancyData/"
 
 	/*------Web API Macros--------------------------------------------------*/
 	#define API_GET_URL(op) WEB_API_BASE_URL "" op
@@ -38,10 +42,12 @@ namespace webapi
 	/*------Web API Helper Function Prototype Defines-------------------------*/
 	char* APIGetResponse(const char* url);
 	char* APIGetResponse(const char* url, int& outStatusCode);
+	int APIPostData(const char* url, const char* postData, const char* authKey);
+
 	std::string MacToString(uint8_t macData[], bool includeSeperators = true);
 	std::string APICalculateUUID();
 
 	esp_err_t api_http_event_handler(esp_http_client_event_t* evt);
 }
 
-#endif /*API_DEFINES_H*/
+#endif /*WEB_API_H_*/
