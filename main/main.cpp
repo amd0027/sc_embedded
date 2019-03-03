@@ -7,6 +7,7 @@
 #include "SCController.h"
 #include "SCDriverADC.h"
 #include "SCHeartRate.h"
+#include "SCDriverI2C.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -27,12 +28,47 @@ void sampleADC1()
     }
 }
 
+void sampleI2C()
+{
+	SCDriverI2C i2c;
+
+	printf("     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f\n");
+	printf("00:         ");
+	for (uint8_t i = 3; i < 0x78; i++) {
+		if (i % 16 == 0) {
+			printf("\n%.2x:", i);
+		}
+		if (i2c.checkSlaveAddress(i)) {
+			printf(" %.2x", i);
+		} else {
+			printf(" --");
+		}
+	}
+	printf("\n\n");
+
+	size_t bufsize = 4;
+	uint8_t* buf = (uint8_t*)malloc(bufsize);
+
+	i2c.setAddress(0x6b);
+	for (int i = 0; i<5; i++)
+	{
+		sleep(1);
+		i2c.beginTransaction();
+		i2c.read(buf, bufsize, true);
+		i2c.endTransaction();
+		for (int j=0; j < bufsize; j++)
+			printf("%.2x\t", buf[j]);
+		printf("\n");
+	}
+}
+
 extern "C" void app_main()
 {
 	printf("Start of main()\n\n");
 
 	//sampleADC1();
+	sampleI2C();
 
-	SCController smartChair;
-	smartChair.Start();
+	//SCController smartChair;
+	//smartChair.Start();
 }
