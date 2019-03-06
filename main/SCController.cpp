@@ -71,49 +71,12 @@ void SCController::Start()
     ESP_LOGI(TAG, "Checking for available firmware update");
     SCOTAUpdate::RunUpdateCheck();
 
-    TestPostData(); // test call to verify API call with DataModels
-
     while(1)
     {
     	vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 
 	//xTaskCreate(this->ApplicationTaskImpl, "application_task", 8192, NULL, 5, NULL);
-}
-
-void SCController::TestPostData()
-{
-	// this is a test routine used to verify that data is being
-	// posted to the server and being mapped with the correct AuthKey
-
-	// This should be removed once actual data is being posted
-    SCDataClient dc(settings.auth_key);
-
-    HeartRateSensorModel hrsm;
-    hrsm.MeasuredBPM = 100;
-    hrsm.Timestamp = "who cares";
-    dc.PostHeartRateData(hrsm);
-    ESP_LOGI(TAG, "Finished posting heart rate junk data");
-
-	PostureSensorModel psm;
-	psm.PostureData = 123;
-	psm.Timestamp = "who cares";
-	dc.PostPostureData(psm);
-	ESP_LOGI(TAG, "Finished posting posture junk data");
-
-	MotionEventModel mem;
-	mem.Level = 13;
-	mem.Axis = MotionEventModel::MotionAxis::X | MotionEventModel::MotionAxis::Y;
-	mem.Timestamp = "who cares";
-	dc.PostMotionData(mem);
-	ESP_LOGI(TAG, "Finished posting motion junk data");
-
-	OccupancySessionModel osm;
-	osm.ElapsedTimeMs = 10000;
-	osm.SitDownTime = "2019-02-11T04:30:00.000Z";
-	osm.Timestamp = "who cares";
-	dc.PostOccupancyData(osm);
-	ESP_LOGI(TAG, "Finished posting occupancy junk data");
 }
 
 void SCController::InitWifi()

@@ -24,7 +24,6 @@ public:
 	void Start();
 
 private:
-	void TestPostData();
 	void InitWifi();
 	static void ApplicationTaskImpl(void* _this);
 	void ApplicationTask();
