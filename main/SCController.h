@@ -25,8 +25,6 @@ public:
 
 private:
 	void InitWifi();
-	static void ApplicationTaskImpl(void* _this);
-	void ApplicationTask();
 
 	static esp_err_t event_handler(void *ctx, system_event_t *event);
 

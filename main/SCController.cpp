@@ -75,8 +75,6 @@ void SCController::Start()
     {
     	vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
-
-	//xTaskCreate(this->ApplicationTaskImpl, "application_task", 8192, NULL, 5, NULL);
 }
 
 void SCController::InitWifi()
@@ -98,16 +96,6 @@ void SCController::InitWifi()
 	ESP_ERROR_CHECK(esp_wifi_start());
 
 	ESP_LOGI(TAG, "init_wifi completed");
-}
-
-/*static*/ void SCController::ApplicationTaskImpl(void* _this)
-{
-	static_cast<SCController*>(_this)->ApplicationTask();
-}
-
-void SCController::ApplicationTask()
-{
-
 }
 
 /*static*/ esp_err_t SCController::event_handler(void *ctx, system_event_t *event)
