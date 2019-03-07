@@ -8,6 +8,8 @@
 
 #include <string>
 #include <cstring>
+#include <thread>
+#include <chrono>
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -116,7 +118,7 @@ void SCController::SamplePosture()
 
 		//bool success = dataClient.PostPostureData(data);
 		//if (!success) ESP_LOGE(TAG, "Error posting Posture data");
-		vTaskDelay(1000 / portTICK_PERIOD_MS);
+		std::this_thread::sleep_for(std::chrono::seconds(1));
 	}
 }
 
@@ -130,7 +132,7 @@ void SCController::SampleHeartRate()
 
 		//bool success = dataClient.PostHeartRateData(data);
 		//if (!success) ESP_LOGE(TAG, "Error posting Heart Rate data");
-		vTaskDelay(2000 / portTICK_PERIOD_MS);
+		std::this_thread::sleep_for(std::chrono::seconds(2));
 	}
 }
 
@@ -140,7 +142,7 @@ void SCController::SampleAirQuality()
 	{
 		ESP_LOGI(TAG, "Posting Air Quality Data");
 		// TODO: implement
-		vTaskDelay(10000 / portTICK_PERIOD_MS);
+		std::this_thread::sleep_for(std::chrono::seconds(10));
 	}
 }
 
@@ -154,7 +156,7 @@ void SCController::SampleMotion()
 
 		//bool success = dataClient.PostMotionData(data);
 		//if (!success) ESP_LOGE(TAG, "Error posting Motion data");
-		vTaskDelay(5000 / portTICK_PERIOD_MS);
+		std::this_thread::sleep_for(std::chrono::seconds(5));
 	}
 }
 
