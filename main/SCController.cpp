@@ -33,7 +33,10 @@ EventGroupHandle_t SCController::wifi_event_group;
 SCController::SCController():
 	settings(),
 	wifi(settings),
-	webserver()
+	webserver(),
+	dataClient(this->settings.auth_key),
+	postureSensor(),
+	heartSensor()
 {
 }
 
@@ -71,10 +74,15 @@ void SCController::Start()
     ESP_LOGI(TAG, "Checking for available firmware update");
     SCOTAUpdate::RunUpdateCheck();
 
-    while(1)
-    {
-    	vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
+	postureSensorThread = std::thread(&SCController::SamplePosture, this);
+	heartSensorThread = std::thread(&SCController::SampleHeartRate, this);
+	airQualitySensorThread = std::thread(&SCController::SampleAirQuality, this);
+	motionSensorThread = std::thread(&SCController::SampleMotion, this);
+
+	while (true)
+	{
+		vTaskDelay(100000 / portTICK_PERIOD_MS);
+	}
 }
 
 void SCController::InitWifi()
@@ -96,6 +104,58 @@ void SCController::InitWifi()
 	ESP_ERROR_CHECK(esp_wifi_start());
 
 	ESP_LOGI(TAG, "init_wifi completed");
+}
+
+void SCController::SamplePosture()
+{
+	while (true)
+	{
+		ESP_LOGI(TAG, "Posting Posture Data");
+		PostureSensorModel data;
+		//data.PostureData = postureSensor.getPosture();
+
+		//bool success = dataClient.PostPostureData(data);
+		//if (!success) ESP_LOGE(TAG, "Error posting Posture data");
+		vTaskDelay(1000 / portTICK_PERIOD_MS);
+	}
+}
+
+void SCController::SampleHeartRate()
+{
+	while (true)
+	{
+		ESP_LOGI(TAG, "Posting Heart Rate Data");
+		//HeartRateSensorModel data;
+		//data.MeasuredBPM = this->heartSensor.getHeartRate();
+
+		//bool success = dataClient.PostHeartRateData(data);
+		//if (!success) ESP_LOGE(TAG, "Error posting Heart Rate data");
+		vTaskDelay(2000 / portTICK_PERIOD_MS);
+	}
+}
+
+void SCController::SampleAirQuality()
+{
+	while (true)
+	{
+		ESP_LOGI(TAG, "Posting Air Quality Data");
+		// TODO: implement
+		vTaskDelay(10000 / portTICK_PERIOD_MS);
+	}
+}
+
+void SCController::SampleMotion()
+{
+	while (true)
+	{
+		ESP_LOGI(TAG, "Posting Motion Data");
+		MotionEventModel data;
+		// TODO: implement
+
+		//bool success = dataClient.PostMotionData(data);
+		//if (!success) ESP_LOGE(TAG, "Error posting Motion data");
+		vTaskDelay(5000 / portTICK_PERIOD_MS);
+	}
 }
 
 /*static*/ esp_err_t SCController::event_handler(void *ctx, system_event_t *event)

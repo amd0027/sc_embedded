@@ -13,9 +13,15 @@
 
 #include <esp_event.h>
 
+#include <thread>
+
 #include "SCSettings.h"
 #include "SCWifi.h"
 #include "SCWebServer.h"
+#include "api/SCDataClient.h"
+#include "api/SensorDataModels.h"
+#include "SCPosture.h"
+#include "SCHeartRate.h"
 
 class SCController
 {
@@ -25,6 +31,10 @@ public:
 
 private:
 	void InitWifi();
+	void SamplePosture();
+	void SampleHeartRate();
+	void SampleAirQuality();
+	void SampleMotion();
 
 	static esp_err_t event_handler(void *ctx, system_event_t *event);
 
@@ -32,6 +42,15 @@ private:
 	SCSettings settings;
 	SCWifi wifi;
 	SCWebServer webserver;
+
+	SCDataClient dataClient;
+	SCPosture postureSensor;
+	SCHeartRate heartSensor;
+
+	std::thread postureSensorThread;
+	std::thread heartSensorThread;
+	std::thread airQualitySensorThread;
+	std::thread motionSensorThread;
 
 	static constexpr const char* TAG = "main app";
 
