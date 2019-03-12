@@ -61,25 +61,34 @@ void SCController::Start()
 	ESP_LOGI(TAG, "Flash Size: %dMB %s", spi_flash_get_chip_size() / (1024 * 1024),
 			(chip_info.features & CHIP_FEATURE_EMB_FLASH) ? "embedded" : "external");
 
-	if (settings.auth_key.empty())
-	{
-		ESP_LOGI(TAG, "No authkey configured for this device");
-	}
-	else
-	{
-		ESP_LOGI(TAG, "The authkey configured for this device is %s", settings.auth_key.c_str());
-	}
-
 	ESP_LOGI(TAG, "Waiting for WiFi to Connect");
     xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT, false, true, portMAX_DELAY);
 
     ESP_LOGI(TAG, "Checking for available firmware update");
     SCOTAUpdate::RunUpdateCheck();
 
-	postureSensorThread = std::thread(&SCController::SamplePosture, this);
-	heartSensorThread = std::thread(&SCController::SampleHeartRate, this);
-	airQualitySensorThread = std::thread(&SCController::SampleAirQuality, this);
-	motionSensorThread = std::thread(&SCController::SampleMotion, this);
+
+    if (settings.auth_key.empty())
+	{
+		ESP_LOGI(TAG, "No authkey configured for this device");
+	}
+	else
+	{
+		ESP_LOGI(TAG, "This device has been configured with an authkey");
+
+		// Only print out the secure AuthKey for internal and debug builds
+		// No sensitive data should be logged in production builds
+#ifndef PRODUCTION_BUILD
+		ESP_LOGI(TAG, "The authkey configured for this device is %s", settings.auth_key.c_str());
+#endif
+
+		// Since the device is configured correctly, start all sensors
+		// and allow them to POST to the server
+		postureSensorThread = std::thread(&SCController::SamplePosture, this);
+		heartSensorThread = std::thread(&SCController::SampleHeartRate, this);
+		airQualitySensorThread = std::thread(&SCController::SampleAirQuality, this);
+		motionSensorThread = std::thread(&SCController::SampleMotion, this);
+	}
 
 	while (true)
 	{
