@@ -25,11 +25,15 @@ public:
 	void setAddress(uint8_t address);
 	uint8_t getAddress();
 	void read(uint8_t* data, size_t length, bool ack);
+	void master_read_slave(uint8_t *data_rd, int size);
+	void i2c_master_sensor_test(i2c_port_t i2c_num, uint8_t *data_h, uint8_t *data_l);
+	void setContinuousMode();
 
+	int buffer_size;
+	uint8_t *data_rd;
+	uint8_t *data_high, *data_low;
 
 private:
-	//uint8_t *buffer;
-	//int buffer_size;
 	i2c_config_t master_chars;
 	uint8_t slave_addr;
 	i2c_cmd_handle_t cmd;
