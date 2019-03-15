@@ -24,14 +24,8 @@ public:
 	bool checkSlaveAddress(uint8_t check);
 	void setAddress(uint8_t address);
 	uint8_t getAddress();
-	void read(uint8_t* data, size_t length, bool ack);
 	void master_read_slave(uint8_t *data_rd, int size);
-	void i2c_master_sensor_test(i2c_port_t i2c_num, uint8_t *data_h, uint8_t *data_l);
-	void setContinuousMode();
-
-	int buffer_size;
-	uint8_t *data_rd;
-	uint8_t *data_high, *data_low;
+	void writeReg(uint8_t slave_address, uint8_t reg, uint8_t value);
 
 private:
 	i2c_config_t master_chars;
