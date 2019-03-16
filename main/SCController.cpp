@@ -97,20 +97,27 @@ void SCController::Start()
 	    esp_pthread_set_cfg(&cfg);
 		airQualitySensorThread = std::thread(&SCController::SampleAirQuality, this);
 
-		cfg.thread_name = "motion_thread";
-	    esp_pthread_set_cfg(&cfg);
-		motionSensorThread = std::thread(&SCController::SampleMotion, this);
-
 		// run the posture sensors on the main thread
 		while (true)
 		{
 			ESP_LOGI(TAG, "Posting Posture Data");
-			PostureSensorModel data;
-			data.PostureData = postureSensor.getPosture();
+			PostureSensorModel postureData;
+			postureData.PostureData = postureSensor.getPosture();
+			ESP_LOGI(TAG, "Posted data was %d", postureData.PostureData);
 
-			bool success = dataClient.PostPostureData(data);
-			if (!success) ESP_LOGE(TAG, "Error posting Posture data");
-			std::this_thread::sleep_for(std::chrono::seconds(30));
+			//bool success = dataClient.PostPostureData(postureData);
+			//if (!success) ESP_LOGE(TAG, "Error posting Posture data");
+
+			/*
+			ESP_LOGI(TAG, "Posting Motion Data");
+			MotionEventModel motionData;
+			// TODO: implement
+
+			success = dataClient.PostMotionData(motionData);
+			if (!success) ESP_LOGE(TAG, "Error posting Motion data");
+			*/
+
+			std::this_thread::sleep_for(std::chrono::seconds(5));
 		}
 	}
 
@@ -163,20 +170,6 @@ void SCController::SampleAirQuality()
 		ESP_LOGI(TAG, "Posting Air Quality Data");
 		// TODO: implement
 		std::this_thread::sleep_for(std::chrono::seconds(10));
-	}
-}
-
-void SCController::SampleMotion()
-{
-	while (true)
-	{
-		ESP_LOGI(TAG, "Posting Motion Data");
-		MotionEventModel data;
-		// TODO: implement
-
-		//bool success = dataClient.PostMotionData(data);
-		//if (!success) ESP_LOGE(TAG, "Error posting Motion data");
-		std::this_thread::sleep_for(std::chrono::seconds(5));
 	}
 }
 

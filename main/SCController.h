@@ -49,7 +49,6 @@ private:
 
 	std::thread heartSensorThread;
 	std::thread airQualitySensorThread;
-	std::thread motionSensorThread;
 
 	static constexpr const char* TAG = "main app";
 
