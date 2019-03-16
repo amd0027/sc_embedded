@@ -37,8 +37,8 @@ SCController::SCController():
 	settings(),
 	wifi(settings),
 	webserver(),
-	dataClient(this->settings.auth_key),
 	postureSensor(),
+	dataClient(this->settings),
 	heartSensor()
 {
 }

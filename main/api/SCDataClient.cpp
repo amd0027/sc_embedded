@@ -13,8 +13,8 @@
 
 const std::string SCDataClient::DATETIME_MIN_VALUE = "0001-01-01T00:00:00.000Z";
 
-SCDataClient::SCDataClient(std::string key):
-	authKey(key)
+SCDataClient::SCDataClient(SCSettings& settings):
+	settings(settings)
 {
 }
 
@@ -40,7 +40,7 @@ bool SCDataClient::PostHeartRateData(HeartRateSensorModel data)
 
 	int response = webapi::APIPostData(API_GET_URL(WEB_API_POST_HEARTRATE),
 			jsonPayloadData,
-			this->authKey.c_str());
+			this->settings.auth_key.c_str());
 
 	ESP_LOGI(TAG, "Heart Rate POST Operation returned with status code %d", response);
 
@@ -69,7 +69,7 @@ bool SCDataClient::PostPostureData(PostureSensorModel data)
 
 	int response = webapi::APIPostData(API_GET_URL(WEB_API_POST_POSTURE),
 			jsonPayloadData,
-			this->authKey.c_str());
+			this->settings.auth_key.c_str());
 
 	ESP_LOGI(TAG, "Posture POST Operation returned with status code %d", response);
 
@@ -104,7 +104,7 @@ bool SCDataClient::PostMotionData(MotionEventModel data)
 
 	int response = webapi::APIPostData(API_GET_URL(WEB_API_POST_MOTION),
 			jsonPayloadData,
-			this->authKey.c_str());
+			this->settings.auth_key.c_str());
 
 	ESP_LOGI(TAG, "Motion Event POST Operation returned with status code %d", response);
 
@@ -139,7 +139,7 @@ bool SCDataClient::PostOccupancyData(OccupancySessionModel data)
 
 	int response = webapi::APIPostData(API_GET_URL(WEB_API_POST_OCCUPANCY),
 			jsonPayloadData,
-			this->authKey.c_str());
+			this->settings.auth_key.c_str());
 
 	ESP_LOGI(TAG, "Occupancy Session POST Operation returned with status code %d", response);
 
