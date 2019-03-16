@@ -20,6 +20,7 @@
 #include <esp_event_loop.h>
 #include <esp_spi_flash.h>
 #include <esp_log.h>
+#include <esp_pthread.h>
 #include <nvs_flash.h>
 
 #include "lwip/err.h"
@@ -84,14 +85,38 @@ void SCController::Start()
 
 		// Since the device is configured correctly, start all sensors
 		// and allow them to POST to the server
-		postureSensorThread = std::thread(&SCController::SamplePosture, this);
+
+		auto cfg = esp_pthread_get_default_config();
+		cfg.stack_size = 1024 * 6;
+
+		cfg.thread_name = "heart_thread";
+	    esp_pthread_set_cfg(&cfg);
 		heartSensorThread = std::thread(&SCController::SampleHeartRate, this);
+
+		cfg.thread_name = "airquality_thread";
+	    esp_pthread_set_cfg(&cfg);
 		airQualitySensorThread = std::thread(&SCController::SampleAirQuality, this);
+
+		cfg.thread_name = "motion_thread";
+	    esp_pthread_set_cfg(&cfg);
 		motionSensorThread = std::thread(&SCController::SampleMotion, this);
+
+		// run the posture sensors on the main thread
+		while (true)
+		{
+			ESP_LOGI(TAG, "Posting Posture Data");
+			PostureSensorModel data;
+			data.PostureData = postureSensor.getPosture();
+
+			bool success = dataClient.PostPostureData(data);
+			if (!success) ESP_LOGE(TAG, "Error posting Posture data");
+			std::this_thread::sleep_for(std::chrono::seconds(30));
+		}
 	}
 
 	while (true)
 	{
+		// endless ultra-slow loop to prevent the device from rebooting
 		vTaskDelay(100000 / portTICK_PERIOD_MS);
 	}
 }
