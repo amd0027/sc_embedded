@@ -35,12 +35,15 @@ int SCPosture::getPosture()
 	{
 		reading = s[i].Sample();
 		reading = reading / SCALING_FACTOR;
+		reading = 0xF - reading; // inverted for Active-Low arrangement on chair
+
 		// If reading does not fit within 4 bits, error message and set to 0
 		if (reading > 16)
 		{
 			printf("Invalid sensor reading: %d\n", reading);
 			reading = 0;
 		}
+		printf("Sensor %d: %d\n", i, reading);
 		result = result | reading;
 		result = result << 4;
 	}
