@@ -47,7 +47,6 @@ private:
 	SCPosture postureSensor;
 	SCHeartRate heartSensor;
 
-	std::thread postureSensorThread;
 	std::thread heartSensorThread;
 	std::thread airQualitySensorThread;
 	std::thread motionSensorThread;

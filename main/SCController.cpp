@@ -37,8 +37,8 @@ SCController::SCController():
 	settings(),
 	wifi(settings),
 	webserver(),
-	postureSensor(),
 	dataClient(this->settings),
+	postureSensor(ADC1_CHANNEL_0, ADC1_CHANNEL_1, ADC1_CHANNEL_2, ADC1_CHANNEL_3, ADC1_CHANNEL_4, ADC1_CHANNEL_5),
 	heartSensor()
 {
 }
@@ -140,20 +140,6 @@ void SCController::InitWifi()
 	ESP_ERROR_CHECK(esp_wifi_start());
 
 	ESP_LOGI(TAG, "init_wifi completed");
-}
-
-void SCController::SamplePosture()
-{
-	while (true)
-	{
-		ESP_LOGI(TAG, "Posting Posture Data");
-		PostureSensorModel data;
-		//data.PostureData = postureSensor.getPosture();
-
-		//bool success = dataClient.PostPostureData(data);
-		//if (!success) ESP_LOGE(TAG, "Error posting Posture data");
-		std::this_thread::sleep_for(std::chrono::seconds(1));
-	}
 }
 
 void SCController::SampleHeartRate()
