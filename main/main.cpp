@@ -5,12 +5,13 @@
 */
 
 #include "SCController.h"
-#include "SCDriverADC.h"
-#include "SCHeartRate.h"
-#include "SCDriverI2C.h"
+
+#include "drivers/SCDriverADC.h"
+#include "drivers/SCHeartRate.h"
+#include "drivers/SCDriverI2C.h"
+
 #include <stdio.h>
 #include <stdlib.h>
-
 
 // Example code to create SCDriverADC object and sample continuously
 void sampleADC1()
