@@ -46,5 +46,7 @@ void SCMotion::Sample()
 	XL_Y_val = (buffer[3] << 8) | buffer[2];
 	XL_Z_val = (buffer[5] << 8) | buffer[4];
 	printf("XL: %7d %7d %7d\n", XL_X_val, XL_Y_val, XL_Z_val);
+
+	//TODO: Return something
 }
 
