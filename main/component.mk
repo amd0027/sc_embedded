@@ -15,4 +15,4 @@ COMPONENT_EMBED_TXTFILES += web/wifidone.html
 COMPONENT_EMBED_TXTFILES += web/wifiwait.html
 COMPONENT_EMBED_TXTFILES += web/reset.html
 
-COMPONENT_SRCDIRS = . api/
+COMPONENT_SRCDIRS = . api/ drivers/

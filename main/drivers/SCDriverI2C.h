@@ -24,12 +24,10 @@ public:
 	bool checkSlaveAddress(uint8_t check);
 	void setAddress(uint8_t address);
 	uint8_t getAddress();
-	void read(uint8_t* data, size_t length, bool ack);
-
+	void master_read_slave(uint8_t *data_rd, int size);
+	void writeReg(uint8_t slave_address, uint8_t reg, uint8_t value);
 
 private:
-	//uint8_t *buffer;
-	//int buffer_size;
 	i2c_config_t master_chars;
 	uint8_t slave_addr;
 	i2c_cmd_handle_t cmd;
