@@ -15,10 +15,9 @@
 
 class SCPosture {
 public:
-	SCPosture();
 	SCPosture(adc1_channel_t channel1, adc1_channel_t channel2, adc1_channel_t channel3, \
 			adc1_channel_t channel4, adc1_channel_t channel5, adc1_channel_t channel6);
-	virtual ~SCPosture();
+
 	int getPosture();
 
 private:

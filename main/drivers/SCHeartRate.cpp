@@ -7,15 +7,6 @@
 
 #include "SCHeartRate.h"
 
-SCHeartRate::SCHeartRate() {
-	// Auto-generated constructor stub
-
-}
-
-SCHeartRate::~SCHeartRate() {
-	// Auto-generated destructor stub
-}
-
 SCHeartRate::SCHeartRate(adc1_channel_t channel, adc_atten_t atten, adc_bits_width_t bits, int rate, int period)
 	: SCDriverADC(channel, atten, bits)
 {

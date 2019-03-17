@@ -21,9 +21,8 @@
 
 class SCDriverADC {
 public:
-	SCDriverADC();
 	SCDriverADC(adc1_channel_t channel, adc_atten_t atten=ADC_ATTEN_DB_0, adc_bits_width_t bits=ADC_WIDTH_BIT_12);
-	virtual ~SCDriverADC();
+
 	uint32_t Sample();
 	uint32_t raw_to_voltage(uint32_t reading);
 	void check_efuse();

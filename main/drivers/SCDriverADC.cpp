@@ -7,15 +7,6 @@
 
 #include "SCDriverADC.h"
 
-SCDriverADC::SCDriverADC() {
-	// Default constructor not enabled - must define at least channel number
-
-}
-
-SCDriverADC::~SCDriverADC() {
-	// Destructor not used
-}
-
 // Main constructor: configures desired adc channel for inputs of channel, attenuation, and data bits.
 // see /home/esp/esp-idf/components/driver/include/driver/adc.h for type declarations
 SCDriverADC::SCDriverADC(adc1_channel_t setchannel, adc_atten_t setatten, adc_bits_width_t setbits) {
