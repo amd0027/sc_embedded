@@ -5,11 +5,7 @@
 */
 
 #include "SCController.h"
-#include "SCDriverADC.h"
-#include "SCHeartRate.h"
-#include "SCDriverI2C.h"
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdlib>
 
 extern "C" void app_main()
 {

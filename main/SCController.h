@@ -20,8 +20,8 @@
 #include "SCWebServer.h"
 #include "api/SCDataClient.h"
 #include "api/SensorDataModels.h"
-#include "SCPosture.h"
-#include "SCHeartRate.h"
+#include "drivers/SCPosture.h"
+#include "drivers/SCHeartRate.h"
 
 class SCController
 {
