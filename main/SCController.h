@@ -22,6 +22,7 @@
 #include "api/SensorDataModels.h"
 #include "drivers/SCPosture.h"
 #include "drivers/SCHeartRate.h"
+#include "drivers/SCMotion.h"
 
 class SCController
 {
@@ -46,6 +47,7 @@ private:
 	SCDataClient dataClient;
 	SCPosture postureSensor;
 	SCHeartRate heartSensor;
+	SCMotion motionSensor;
 
 	std::thread heartSensorThread;
 	std::thread airQualitySensorThread;

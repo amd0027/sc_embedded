@@ -39,7 +39,8 @@ SCController::SCController():
 	webserver(),
 	dataClient(this->settings),
 	postureSensor(ADC1_CHANNEL_0, ADC1_CHANNEL_1, ADC1_CHANNEL_2, ADC1_CHANNEL_3, ADC1_CHANNEL_4, ADC1_CHANNEL_5),
-	heartSensor(ADC1_CHANNEL_6 /*TODO: Correct Channel*/)
+	heartSensor(ADC1_CHANNEL_6 /*TODO: Correct Channel*/),
+	motionSensor()
 {
 }
 
@@ -108,6 +109,7 @@ void SCController::Start()
 			//bool success = dataClient.PostPostureData(postureData);
 			//if (!success) ESP_LOGE(TAG, "Error posting Posture data");
 
+			motionSensor.Sample();
 			/*
 			ESP_LOGI(TAG, "Posting Motion Data");
 			MotionEventModel motionData;
