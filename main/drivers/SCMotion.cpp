@@ -7,6 +7,8 @@
 
 #include "SCMotion.h"
 
+#include <stdio.h>
+
 SCMotion::SCMotion()
 {
 	i2c.setAddress(0x6b); // 0x6b is address of accelerometer
@@ -20,7 +22,7 @@ SCMotion::SCMotion()
 
 SCMotionRawData SCMotion::SampleAccelerometer()
 {
-	uint8_t *buffer = (uint8_t*)malloc(6);
+	uint8_t buffer[6];
 	int16_t XL_X_val, XL_Y_val, XL_Z_val;
 
 	i2c.beginTransaction();
