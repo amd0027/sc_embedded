@@ -33,7 +33,7 @@ public:
 private:
 	void InitWifi();
 	int SamplePosture();
-	int SampleMotion();
+	void SampleMotion();
 	void SampleHeartRate();
 	void SampleAirQuality();
 
@@ -51,6 +51,7 @@ private:
 	SCHeartRate heartSensor;
 	SCMotion motionSensor;
 
+	std::thread motionSensorThread;
 	std::thread heartSensorThread;
 	std::thread airQualitySensorThread;
 

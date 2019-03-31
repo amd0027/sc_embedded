@@ -99,6 +99,10 @@ void SCController::Start()
 		auto cfg = esp_pthread_get_default_config();
 		cfg.stack_size = 1024 * 6;
 
+		cfg.thread_name = "motion_thread";
+		esp_pthread_set_cfg(&cfg);
+		motionSensorThread = std::thread(&SCController::SampleMotion, this);
+
 		cfg.thread_name = "heart_thread";
 	    esp_pthread_set_cfg(&cfg);
 		heartSensorThread = std::thread(&SCController::SampleHeartRate, this);
@@ -107,7 +111,7 @@ void SCController::Start()
 	    esp_pthread_set_cfg(&cfg);
 		airQualitySensorThread = std::thread(&SCController::SampleAirQuality, this);
 
-		// run the posture sensors and motion sensor on the main thread
+		// run the posture sensors on the main thread
 		while (true)
 		{
 			int postureData = SamplePosture();
@@ -132,19 +136,6 @@ void SCController::Start()
 			{
 				EnterDeepSleep();
 			}
-
-			/*---- Sample Motion Data ---------*/
-			motionSensor.SampleAccelerometer();
-
-			ESP_LOGI(TAG, "Posting Motion Data");
-			MotionEventModel motionData;
-			// TODO: implement
-
-			success = dataClient.PostMotionData(motionData);
-			if (!success) ESP_LOGE(TAG, "Error posting Motion data");
-
-
-			std::this_thread::sleep_for(std::chrono::seconds(5));
 		}
 	}
 
@@ -198,21 +189,40 @@ int SCController::SamplePosture()
 	return postureData;
 }
 
-int SCController::SampleMotion()
+void SCController::SampleMotion()
 {
+	while (true)
+	{
+		/*---- Sample Motion Data ---------*/
+		motionSensor.SampleAccelerometer();
 
+		ESP_LOGI(TAG, "Posting Motion Data");
+		MotionEventModel motionData;
+		// TODO: implement
+
+		//bool success = dataClient.PostMotionData(motionData);
+		//if (!success) ESP_LOGE(TAG, "Error posting Motion data");
+
+		std::this_thread::sleep_for(std::chrono::seconds(5));
+	}
 }
 
 void SCController::SampleHeartRate()
 {
 	while (true)
 	{
-		ESP_LOGI(TAG, "Posting Heart Rate Data");
-		//HeartRateSensorModel data;
-		//data.MeasuredBPM = this->heartSensor.getHeartRate();
+		ESP_LOGI(TAG, "Sampling Heart Rate Data");
+		int measuredBpm = heartSensor.getHeartRate();
+		if (measuredBpm > 0)
+		{
+			ESP_LOGI(TAG, "Posting Heart Rate Data");
+			HeartRateSensorModel data;
+			data.MeasuredBPM = measuredBpm;
 
-		//bool success = dataClient.PostHeartRateData(data);
-		//if (!success) ESP_LOGE(TAG, "Error posting Heart Rate data");
+			//bool success = dataClient.PostHeartRateData(data);
+			//if (!success) ESP_LOGE(TAG, "Error posting Heart Rate data");
+		}
+
 		std::this_thread::sleep_for(std::chrono::seconds(2));
 	}
 }
