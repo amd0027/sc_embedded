@@ -32,10 +32,12 @@ public:
 
 private:
 	void InitWifi();
-	void SamplePosture();
+	int SamplePosture();
+	int SampleMotion();
 	void SampleHeartRate();
 	void SampleAirQuality();
-	void SampleMotion();
+
+	void EnterDeepSleep();
 
 	static esp_err_t event_handler(void *ctx, system_event_t *event);
 
@@ -52,11 +54,12 @@ private:
 	std::thread heartSensorThread;
 	std::thread airQualitySensorThread;
 
+	bool isOccupied;
+
 	static constexpr const char* TAG = "main app";
 
 	static EventGroupHandle_t wifi_event_group;
 	static constexpr const int WIFI_CONNECTED_BIT = BIT0;
-
 };
 
 #endif /*SCCONTROLLER_H*/

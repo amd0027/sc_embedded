@@ -40,16 +40,13 @@ SCController::SCController():
 	dataClient(this->settings),
 	postureSensor(ADC1_CHANNEL_0, ADC1_CHANNEL_1, ADC1_CHANNEL_2, ADC1_CHANNEL_3, ADC1_CHANNEL_4, ADC1_CHANNEL_5),
 	heartSensor(ADC1_CHANNEL_6 /*TODO: Correct Channel*/),
-	motionSensor()
+	motionSensor(),
+	isOccupied(false)
 {
 }
 
 void SCController::Start()
 {
-	settings.Load();
-	InitWifi();
-	webserver.Start();
-
 	/* Print chip information */
 	esp_chip_info_t chip_info;
 	esp_chip_info(&chip_info);
@@ -63,12 +60,24 @@ void SCController::Start()
 	ESP_LOGI(TAG, "Flash Size: %dMB %s", spi_flash_get_chip_size() / (1024 * 1024),
 			(chip_info.features & CHIP_FEATURE_EMB_FLASH) ? "embedded" : "external");
 
+	// Before we begin to initialize the chair, check and see if it is occupied
+	// If not, return to Deep Sleep mode before Wi-Fi connects to save power
+	SamplePosture();
+	if (!isOccupied)
+	{
+		EnterDeepSleep();
+	}
+
+	ESP_LOGI(TAG, "Beginning chair initialization process");
+	settings.Load();
+	InitWifi();
+	webserver.Start();
+
 	ESP_LOGI(TAG, "Waiting for WiFi to Connect");
     xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT, false, true, portMAX_DELAY);
 
     ESP_LOGI(TAG, "Checking for available firmware update");
     SCOTAUpdate::RunUpdateCheck();
-
 
     if (settings.auth_key.empty())
 	{
@@ -98,26 +107,42 @@ void SCController::Start()
 	    esp_pthread_set_cfg(&cfg);
 		airQualitySensorThread = std::thread(&SCController::SampleAirQuality, this);
 
-		// run the posture sensors on the main thread
+		// run the posture sensors and motion sensor on the main thread
 		while (true)
 		{
-			ESP_LOGI(TAG, "Posting Posture Data");
-			PostureSensorModel postureData;
-			postureData.PostureData = postureSensor.getPosture();
-			ESP_LOGI(TAG, "Posted data was %d", postureData.PostureData);
+			int postureData = SamplePosture();
 
-			//bool success = dataClient.PostPostureData(postureData);
-			//if (!success) ESP_LOGE(TAG, "Error posting Posture data");
+			// Post Posture Data
+			if (isOccupied)
+			{
+				ESP_LOGI(TAG, "Posting Posture Data");
+				PostureSensorModel postureDataModel;
+				postureDataModel.PostureData = postureData;
+				//ESP_LOGI(TAG, "Posted data was %d", postureData.PostureData);
+				bool success = dataClient.PostPostureData(postureDataModel);
+				if (!success) ESP_LOGE(TAG, "Error posting Posture data");
+			}
 
-			motionSensor.Sample();
-			/*
+			// Delay or Sleep
+			if (isOccupied)
+			{
+				// delay?
+			}
+			else
+			{
+				EnterDeepSleep();
+			}
+
+			/*---- Sample Motion Data ---------*/
+			motionSensor.SampleAccelerometer();
+
 			ESP_LOGI(TAG, "Posting Motion Data");
 			MotionEventModel motionData;
 			// TODO: implement
 
 			success = dataClient.PostMotionData(motionData);
 			if (!success) ESP_LOGE(TAG, "Error posting Motion data");
-			*/
+
 
 			std::this_thread::sleep_for(std::chrono::seconds(5));
 		}
@@ -151,6 +176,33 @@ void SCController::InitWifi()
 	ESP_LOGI(TAG, "init_wifi completed");
 }
 
+int SCController::SamplePosture()
+{
+	static const int POSTURE_AVERAGING_COUNT = 5;
+	static const int POSTURE_AVERAGING_DELAY_SEC = 8;
+
+	/*---- Sample Posture Data ---------*/
+	int postureData = postureSensor.getPosture();
+	std::this_thread::sleep_for(std::chrono::seconds(POSTURE_AVERAGING_DELAY_SEC));
+	for (int i = 0; i < POSTURE_AVERAGING_COUNT-1; i++)
+	{
+		int newSample = postureSensor.getPosture();
+		postureData = SCPosture::AveragePostureSamples(postureData, newSample);
+		std::this_thread::sleep_for(std::chrono::seconds(POSTURE_AVERAGING_DELAY_SEC));
+	}
+
+	isOccupied = SCPosture::PredictOccupied(postureData);
+	if (isOccupied) ESP_LOGI(TAG, "The SmartChair is currently occupied");
+	else			ESP_LOGI(TAG, "The SmartChair is currently NOT occupied");
+
+	return postureData;
+}
+
+int SCController::SampleMotion()
+{
+
+}
+
 void SCController::SampleHeartRate()
 {
 	while (true)
@@ -173,6 +225,18 @@ void SCController::SampleAirQuality()
 		// TODO: implement
 		std::this_thread::sleep_for(std::chrono::seconds(10));
 	}
+}
+
+void SCController::EnterDeepSleep()
+{
+	ESP_LOGI(TAG, "Entering Deep Sleep Mode....");
+
+	esp_wifi_stop();
+
+    const int deepSleepMinutes = 5;
+    int deepSleepSec = deepSleepMinutes * 60;
+    ESP_LOGI(TAG, "Entering deep sleep for %d seconds", deepSleepSec);
+    esp_deep_sleep(1000000LL * deepSleepSec);
 }
 
 /*static*/ esp_err_t SCController::event_handler(void *ctx, system_event_t *event)
