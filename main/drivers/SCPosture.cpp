@@ -40,3 +40,34 @@ int SCPosture::getPosture()
 	}
 	return result;
 }
+
+/*static*/ int SCPosture::AveragePostureSamples(int sample1, int sample2)
+{
+	int result = 0;
+	for (int i = 0; i < 6; i++)
+	{
+		int val1 = sample1 & 0xF;
+		int val2 = sample2 & 0xF;
+		int valAvg = (val1 + val2) / 2;
+
+		sample1 = sample1 >> 4;
+		sample2 = sample2 >> 4;
+
+		result = result | (valAvg << (4 * i));
+	}
+
+	return result;
+}
+
+/*static*/ bool SCPosture::PredictOccupied(int sample)
+{
+	bool result = true;
+	for (int i = 0; i < 6; i++)
+	{
+		int value = sample & 0xF;
+
+		result &= (value != 0);
+	}
+
+	return result;
+}
