@@ -32,7 +32,8 @@ extern "C"
 #include "api/SCPairing.h"
 
 SCWebServer::SCWebServer():
-		server(NULL)
+		server(NULL),
+		nonsecureServer(NULL)
 {
 }
 
