@@ -37,7 +37,7 @@ void sampleI2C()
 	// continuously sample from slave
 	while(1)
 	{
-		motion.Sample();
+		motion.SampleAccelerometer();
 
 		vTaskDelay(100 / portTICK_PERIOD_MS);
 	}
