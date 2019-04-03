@@ -60,16 +60,20 @@ void SCController::Start()
 	ESP_LOGI(TAG, "Flash Size: %dMB %s", spi_flash_get_chip_size() / (1024 * 1024),
 			(chip_info.features & CHIP_FEATURE_EMB_FLASH) ? "embedded" : "external");
 
-	// Before we begin to initialize the chair, check and see if it is occupied
-	// If not, return to Deep Sleep mode before Wi-Fi connects to save power
-	SamplePosture();
-	if (!isOccupied)
-	{
-		EnterDeepSleep();
-	}
-
 	ESP_LOGI(TAG, "Beginning chair initialization process");
 	settings.Load();
+
+	if (!settings.auth_key.empty())
+	{
+		// Before we begin to initialize the chair, check and see if it is occupied
+		// If not, return to Deep Sleep mode before Wi-Fi connects to save power
+		SamplePosture();
+		if (!isOccupied)
+		{
+			EnterDeepSleep();
+		}
+	}
+
 	InitWifi();
 	webserver.Start();
 
@@ -182,6 +186,8 @@ int SCController::SamplePosture()
 		std::this_thread::sleep_for(std::chrono::seconds(POSTURE_AVERAGING_DELAY_SEC));
 	}
 
+	ESP_LOGI(TAG, "The averaged value is %d", postureData);
+
 	isOccupied = SCPosture::PredictOccupied(postureData);
 	if (isOccupied) ESP_LOGI(TAG, "The SmartChair is currently occupied");
 	else			ESP_LOGI(TAG, "The SmartChair is currently NOT occupied");
@@ -212,7 +218,7 @@ void SCController::SampleHeartRate()
 	while (true)
 	{
 		ESP_LOGI(TAG, "Sampling Heart Rate Data");
-		int measuredBpm = heartSensor.getHeartRate();
+		int measuredBpm = 0; //= heartSensor.getHeartRate();
 		if (measuredBpm > 0)
 		{
 			ESP_LOGI(TAG, "Posting Heart Rate Data");
