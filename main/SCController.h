@@ -12,6 +12,7 @@
 #include <freertos/event_groups.h>
 
 #include <esp_event.h>
+#include <sys/time.h>
 
 #include <thread>
 
@@ -37,6 +38,8 @@ private:
 	void SampleHeartRate();
 	void SampleAirQuality();
 
+	void PostOccupancySession(int elapsedSeconds);
+
 	void EnterDeepSleep();
 
 	static esp_err_t event_handler(void *ctx, system_event_t *event);
@@ -56,6 +59,7 @@ private:
 	std::thread airQualitySensorThread;
 
 	bool isOccupied;
+	struct timeval occupiedBeginTime;
 
 	static constexpr const char* TAG = "main app";
 

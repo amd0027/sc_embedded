@@ -122,13 +122,14 @@ bool SCDataClient::PostOccupancyData(OccupancySessionModel data)
 		return false;
 	}
 
-	if (cJSON_AddNumberToObject(json, "ElapsedTimeMs", data.ElapsedTimeMs) == NULL)
+	if (cJSON_AddNumberToObject(json, "ElapsedTimeSeconds", data.ElapsedTimeSeconds) == NULL)
 	{
 		cJSON_Delete(json);
 		return false;
 	}
 
-	if (cJSON_AddStringToObject(json, "SitDownTime", data.SitDownTime.c_str()) == NULL)
+	// Let SitDownTime be adjusted on the server to the receive time
+	if (cJSON_AddStringToObject(json, "SitDownTime", DATETIME_MIN_VALUE.c_str()) == NULL)
 		{
 			cJSON_Delete(json);
 			return false;

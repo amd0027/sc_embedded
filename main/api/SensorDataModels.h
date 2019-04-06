@@ -23,7 +23,7 @@ class OccupancySessionModel
 public:
 	std::string Timestamp;
 	std::string SitDownTime;
-	uint32_t ElapsedTimeMs;
+	uint32_t ElapsedTimeSeconds;
 };
 
 class MotionEventModel

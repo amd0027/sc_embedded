@@ -188,9 +188,26 @@ int SCController::SamplePosture()
 
 	ESP_LOGI(TAG, "The averaged value is %d", postureData);
 
+	bool wasOccupied = isOccupied;
 	isOccupied = SCPosture::PredictOccupied(postureData);
 	if (isOccupied) ESP_LOGI(TAG, "The SmartChair is currently occupied");
 	else			ESP_LOGI(TAG, "The SmartChair is currently NOT occupied");
+
+	if (isOccupied && !wasOccupied)
+	{
+		// the user just sat down, begin timing the sitting session
+		gettimeofday(&occupiedBeginTime, NULL);
+	}
+	else if (!isOccupied && wasOccupied)
+	{
+		// the user just got up
+		struct timeval endTime;
+		gettimeofday(&endTime, NULL);
+
+		int elapsedSeconds = (endTime.tv_sec - occupiedBeginTime.tv_sec);
+
+		PostOccupancySession(elapsedSeconds);
+	}
 
 	return postureData;
 }
@@ -241,6 +258,16 @@ void SCController::SampleAirQuality()
 		// TODO: implement
 		std::this_thread::sleep_for(std::chrono::seconds(10));
 	}
+}
+
+void SCController::PostOccupancySession(int elapsedSeconds)
+{
+	ESP_LOGI(TAG, "Posting Occupancy Session Data");
+	OccupancySessionModel dataModel;
+	dataModel.ElapsedTimeSeconds = elapsedSeconds;
+	ESP_LOGI(TAG, "Posted data was %d seconds", elapsedSeconds);
+	bool success = dataClient.PostOccupancyData(dataModel);
+	if (!success) ESP_LOGE(TAG, "Error posting Occupancy data");
 }
 
 void SCController::EnterDeepSleep()
