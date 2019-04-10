@@ -12,7 +12,22 @@
          Operation Completed
       </h2>
       <span id="msg"></span><br /><br /><a class="pure-button" href="/">Continue</a>
+	  
+	  <div id="rebootsection" style="display: none;">
+	  	<form method="post" action="setreboot" class="pure-form pure-form-aligned" >
+			<br>
+			<input type="submit" value="Reboot SmartChair" class="pure-button">
+			<br>
+			<br>
+		</form>
+	  </div>
+	  
    </div>
    <script>document.getElementById("msg").innerHTML = decodeURIComponent(getParameterByName("err"));</script>
+   
+   <script>
+	if (getParameterByName("reboot") == 'true')
+		document.getElementById("rebootsection").style.display = "block";
+	</script>
 </body>
 </html>
