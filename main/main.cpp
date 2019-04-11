@@ -10,6 +10,7 @@
 #include "drivers/SCDriverI2C.h"
 #include "drivers/SCHeartRate.h"
 #include "drivers/SCMotion.h"
+#include "drivers/SCAirQuality.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,13 +34,20 @@ void sampleADC1()
 void sampleI2C()
 {
 	SCMotion motion;
+	SCAirQuality air_quality;
+
+	SCMotionRawData XL_data;
+	SCAirRawData AQS_data;
 
 	// continuously sample from slave
 	while(1)
 	{
-		motion.Sample();
+		XL_data = motion.Sample();
+		AQS_data = air_quality.Sample();
 
-		vTaskDelay(100 / portTICK_PERIOD_MS);
+		printf("XL:  %7d x %7d y %7d z\n", XL_data.x, XL_data.y, XL_data.z);
+		printf("AQS: %7d c %7d v\n", AQS_data.CO2, AQS_data.VOC);
+		vTaskDelay(1000 / portTICK_PERIOD_MS);
 	}
 }
 

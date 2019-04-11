@@ -10,13 +10,20 @@
 
 #include "SCDriverI2C.h"
 
+struct SCMotionRawData
+{
+	int x;
+	int y;
+	int z;
+};
+
 class SCMotion {
 public:
 	SCMotion();
-	void Sample();
+	SCMotionRawData Sample();
 
 private:
-	SCDriverI2C i2c;
+	SCDriverI2C i2c = SCDriverI2C(0);
 
 };
 

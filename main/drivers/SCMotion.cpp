@@ -34,19 +34,22 @@ SCMotion::SCMotion()
 	//i2c.writeReg(0x6b, 0x10, 0x80);	// Gyroscope: set output data rate to 238 Hz ("normal mode"). Register 0x10
 }
 
-void SCMotion::Sample()
+SCMotionRawData SCMotion::Sample()
 {
-	uint8_t *buffer = (uint8_t*)malloc(6);
+	uint8_t buffer[6];
 	int16_t XL_X_val, XL_Y_val, XL_Z_val;
 
 	i2c.beginTransaction();
-	i2c.master_read_slave(buffer, 6);
+	i2c.master_read_XL(buffer, 6);//, 0x6b, 0x28, 0);
 	i2c.endTransaction();
 	XL_X_val = (buffer[1] << 8) | buffer[0];
 	XL_Y_val = (buffer[3] << 8) | buffer[2];
 	XL_Z_val = (buffer[5] << 8) | buffer[4];
-	printf("XL: %7d %7d %7d\n", XL_X_val, XL_Y_val, XL_Z_val);
+	//printf("XL: %7d %7d %7d\n", XL_X_val, XL_Y_val, XL_Z_val);
 
-	//TODO: Return something
+	SCMotionRawData result;
+	result.x = XL_X_val;
+	result.y = XL_Y_val;
+	result.z = XL_Z_val;
+	return result;
 }
-

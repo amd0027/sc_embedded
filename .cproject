@@ -70,8 +70,8 @@
 		<buildTargets>
 			<target name="flash" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>python</buildCommand>
-				<buildArguments>C:/msys32/home/smartchair/esp/esp-idf/components/esptool_py/esptool/esptool.py --chip esp32 --port COM3 --baud 115200 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 0xd000 /home/smartchair/workspace/sc_embedded/build/ota_data_initial.bin 0x1000 /home/smartchair/workspace/sc_embedded/build/bootloader/bootloader.bin 0x10000 /home/smartchair/workspace/sc_embedded/build/sc_embedded.bin 0x8000 C:/msys32/home/smartchair/workspace/sc_embedded/build/partitions.bin</buildArguments>
-				<buildTarget>just use the terminal</buildTarget>
+				<buildArguments>C:/msys32/home/smartchair/esp/esp-idf/components/esptool_py/esptool/esptool.py --chip esp32 --port COM4 --baud 115200 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 0xd000 C:/msys32/home/smartchair/workspace/sc_embedded/build/ota_data_initial.bin 0x1000 C:/msys32/home/smartchair/workspace/sc_embedded/build/bootloader/bootloader.bin 0x10000 C:/msys32/home/smartchair/workspace/sc_embedded/build/sc_embedded.bin 0x8000 C:/msys32/home/smartchair/workspace/sc_embedded/build/partitions.bin</buildArguments>
+				<buildTarget/>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
 				<runAllBuilders>true</runAllBuilders>
