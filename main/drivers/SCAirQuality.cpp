@@ -15,7 +15,7 @@ SCAirQuality::SCAirQuality()
 	// Used to set Air Quality sensor to running mode. A contentless write into the APP_START register (0xf4)
 	i2c.startAQSApplication();
 	// Change data mode from idle (default) to update data every 60 seconds in the MEAS_MODE register (0x01)
-	i2c.writeReg(0x5b, 0x01, 0x10);
+	i2c.writeReg(0x5b, 0x01, 0x30);
 }
 
 SCAirQuality::~SCAirQuality() {
