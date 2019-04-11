@@ -26,7 +26,7 @@ SCMotionRawData SCMotion::SampleAccelerometer()
 	int16_t XL_X_val, XL_Y_val, XL_Z_val;
 
 	i2c.beginTransaction();
-	i2c.master_read_slave(buffer, 6);
+	i2c.master_read_XL(buffer, 6);//, 0x6b, 0x28, 0);
 	i2c.endTransaction();
 	XL_X_val = (buffer[1] << 8) | buffer[0];
 	XL_Y_val = (buffer[3] << 8) | buffer[2];
@@ -58,4 +58,3 @@ void SCMotion::DumpI2CRegisters()
 	}
 	printf("\n\n");
 }
-

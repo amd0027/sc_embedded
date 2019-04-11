@@ -26,7 +26,7 @@ private:
 	void DumpI2CRegisters();
 
 private:
-	SCDriverI2C i2c;
+	SCDriverI2C i2c = SCDriverI2C(0);
 
 };
 

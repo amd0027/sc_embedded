@@ -2,7 +2,7 @@
  * SCDriverI2C.h
  *
  *  Created on: Mar 3, 2019
- *      Author: Chris Taylor
+ *      Author: Chris Taylor, Logan Johnson
  */
 
 #ifndef MAIN_SCDRIVERI2C_H_
@@ -18,14 +18,21 @@
 class SCDriverI2C {
 public:
 	SCDriverI2C();
+	SCDriverI2C(int n);
 	virtual ~SCDriverI2C();
 	void beginTransaction();
 	void endTransaction();
 	bool checkSlaveAddress(uint8_t check);
 	void setAddress(uint8_t address);
 	uint8_t getAddress();
-	void master_read_slave(uint8_t *data_rd, int size);
+	//void master_read_slave(uint8_t *data_rd, int size, uint8_t slave_address, uint8_t read_reg, int AQS_flag);
 	void writeReg(uint8_t slave_address, uint8_t reg, uint8_t value);
+	void master_read_XL(uint8_t *data_rd, int size);
+	void master_read_AQS(uint8_t *data_rd, int size, uint8_t reg);
+
+	// temp testing functions
+	// void master_read_slave(uint8_t *data_rd, int size);
+
 
 private:
 	i2c_config_t master_chars;
