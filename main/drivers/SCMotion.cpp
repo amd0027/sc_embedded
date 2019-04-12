@@ -20,7 +20,7 @@ SCMotion::SCMotion()
 	//i2c.writeReg(0x6b, 0x10, 0x80);	// Gyroscope: set output data rate to 238 Hz ("normal mode"). Register 0x10
 }
 
-SCMotionRawData SCMotion::Sample()
+SCMotionRawData SCMotion::SampleAccelerometer()
 {
 	uint8_t buffer[6];
 	int16_t XL_X_val, XL_Y_val, XL_Z_val;
