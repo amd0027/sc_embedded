@@ -146,3 +146,37 @@ bool SCDataClient::PostOccupancyData(OccupancySessionModel data)
 
 	return (response == 200);
 }
+
+bool SCDataClient::PostAirQualityData(AirQualityModel data)
+{
+	cJSON* json = cJSON_CreateObject();
+
+	// for now, we are ignoring the timestamp field and substituting DateTime.MinValue
+	if (cJSON_AddStringToObject(json, "Timestamp", DATETIME_MIN_VALUE.c_str()) == NULL)
+	{
+		cJSON_Delete(json);
+		return false;
+	}
+
+	if (cJSON_AddNumberToObject(json, "CO2", data.CO2) == NULL)
+	{
+		cJSON_Delete(json);
+		return false;
+	}
+
+	if (cJSON_AddNumberToObject(json, "VOC", data.VOC) == NULL)
+	{
+		cJSON_Delete(json);
+		return false;
+	}
+
+	char* jsonPayloadData = cJSON_Print(json);
+
+	int response = webapi::APIPostData(API_GET_URL(WEB_API_POST_AIRQUALITY),
+			jsonPayloadData,
+			this->settings.auth_key.c_str());
+
+	ESP_LOGI(TAG, "Air Quality POST Operation returned with status code %d", response);
+
+	return (response == 200);
+}

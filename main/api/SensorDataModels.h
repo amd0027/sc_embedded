@@ -44,4 +44,13 @@ public:
 	uint16_t Level;
 };
 
+class AirQualityModel
+{
+public:
+	std::string Timestamp;
+
+	int CO2;
+	int VOC;
+};
+
 #endif /*SENSORDATAMODELS_H_*/

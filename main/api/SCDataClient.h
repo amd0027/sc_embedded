@@ -20,6 +20,8 @@ public:
 	bool PostPostureData(PostureSensorModel data);
 	bool PostMotionData(MotionEventModel data);
 	bool PostOccupancyData(OccupancySessionModel data);
+	bool PostAirQualityData(AirQualityModel data);
+
 
 private:
 	static const std::string DATETIME_MIN_VALUE;
