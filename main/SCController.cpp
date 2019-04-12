@@ -214,19 +214,52 @@ int SCController::SamplePosture()
 
 void SCController::SampleMotion()
 {
+	static const int MOTION_AVERAGING_DELAY_MILLISEC = 100;
+
+	SCMotionRawData lastPoint = motionSensor.SampleAccelerometer();
+	std::this_thread::sleep_for(std::chrono::milliseconds(MOTION_AVERAGING_DELAY_MILLISEC));
+
 	while (true)
 	{
 		/*---- Sample Motion Data ---------*/
-		motionSensor.SampleAccelerometer();
+		SCMotionRawData data = motionSensor.SampleAccelerometer();
+		float pctDiffX = abs(data.x - lastPoint.x) / (float)lastPoint.x;
+		float pctDiffY = abs(data.y - lastPoint.y) / (float)lastPoint.y;
+		float pctDiffZ = abs(data.z - lastPoint.z) / (float)lastPoint.z;
 
-		ESP_LOGI(TAG, "Posting Motion Data");
-		MotionEventModel motionData;
-		// TODO: implement
+		if (pctDiffX > 0.60)
+		{
+			MotionEventModel motionData;
+			motionData.Axis = MotionEventModel::MotionAxis::X;
+			motionData.Level = pctDiffX * 100;
+			ESP_LOGI(TAG, "Posting motion data for X with level %d", motionData.Level);
+			bool success = dataClient.PostMotionData(motionData);
+			if (!success) ESP_LOGE(TAG, "Error posting Motion data for X");
+		}
 
-		//bool success = dataClient.PostMotionData(motionData);
-		//if (!success) ESP_LOGE(TAG, "Error posting Motion data");
+		if (pctDiffY > 0.60)
+		{
+			MotionEventModel motionData;
+			motionData.Axis = MotionEventModel::MotionAxis::Y;
+			motionData.Level = pctDiffY * 100;
+			ESP_LOGI(TAG, "Posting motion data for Y with level %d", motionData.Level);
+			ESP_LOGI(TAG, "PCT DIFF was %f", pctDiffY);
+			bool success = dataClient.PostMotionData(motionData);
+			if (!success) ESP_LOGE(TAG, "Error posting Motion data for Y");
+		}
 
-		std::this_thread::sleep_for(std::chrono::seconds(5));
+		if (pctDiffZ > 0.60)
+		{
+			MotionEventModel motionData;
+			motionData.Axis = MotionEventModel::MotionAxis::Z;
+			motionData.Level = pctDiffZ * 100;
+			ESP_LOGI(TAG, "Posting motion data for Z with level %d", motionData.Level);
+			bool success = dataClient.PostMotionData(motionData);
+			if (!success) ESP_LOGE(TAG, "Error posting Motion data for Z");
+		}
+
+		lastPoint = data;
+		std::this_thread::sleep_for(std::chrono::milliseconds(MOTION_AVERAGING_DELAY_MILLISEC));
 	}
 }
 
