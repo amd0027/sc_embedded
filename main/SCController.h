@@ -24,6 +24,7 @@
 #include "drivers/SCPosture.h"
 #include "drivers/SCHeartRate.h"
 #include "drivers/SCMotion.h"
+#include "drivers/SCAirQuality.h"
 
 class SCController
 {
@@ -53,6 +54,7 @@ private:
 	SCPosture postureSensor;
 	SCHeartRate heartSensor;
 	SCMotion motionSensor;
+	SCAirQuality airQualitySensor;
 
 	std::thread motionSensorThread;
 	std::thread heartSensorThread;

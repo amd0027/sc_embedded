@@ -39,8 +39,9 @@ SCController::SCController():
 	webserver(),
 	dataClient(this->settings),
 	postureSensor(ADC1_CHANNEL_0, ADC1_CHANNEL_1, ADC1_CHANNEL_2, ADC1_CHANNEL_3, ADC1_CHANNEL_4, ADC1_CHANNEL_5),
-	heartSensor(ADC1_CHANNEL_6 /*TODO: Correct Channel*/),
+	heartSensor(ADC1_CHANNEL_6, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_12, 10, 10),
 	motionSensor(),
+	airQualitySensor(),
 	isOccupied(false)
 {
 }
@@ -287,8 +288,18 @@ void SCController::SampleAirQuality()
 {
 	while (true)
 	{
-		ESP_LOGI(TAG, "Posting Air Quality Data");
-		// TODO: implement
+		SCAirRawData airDataRaw;
+		airDataRaw = airQualitySensor.Sample();
+		printf("AQS: %7d c %7d v\n", airDataRaw.CO2, airDataRaw.VOC);
+
+		AirQualityModel data;
+		data.CO2 = airDataRaw.CO2;
+		data.VOC = airDataRaw.VOC;
+
+		ESP_LOGI(TAG, "Posting Air Quality data with CO2: %d and VOC: %d", data.CO2, data.VOC);
+		bool success = dataClient.PostAirQualityData(data);
+		if (!success) ESP_LOGE(TAG, "Error posting Air Quality data");
+
 		std::this_thread::sleep_for(std::chrono::seconds(10));
 	}
 }
