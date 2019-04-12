@@ -13,8 +13,8 @@
 
 const std::string SCDataClient::DATETIME_MIN_VALUE = "0001-01-01T00:00:00.000Z";
 
-SCDataClient::SCDataClient(std::string key):
-	authKey(key)
+SCDataClient::SCDataClient(SCSettings& settings):
+	settings(settings)
 {
 }
 
@@ -40,7 +40,7 @@ bool SCDataClient::PostHeartRateData(HeartRateSensorModel data)
 
 	int response = webapi::APIPostData(API_GET_URL(WEB_API_POST_HEARTRATE),
 			jsonPayloadData,
-			this->authKey.c_str());
+			this->settings.auth_key.c_str());
 
 	ESP_LOGI(TAG, "Heart Rate POST Operation returned with status code %d", response);
 
@@ -69,7 +69,7 @@ bool SCDataClient::PostPostureData(PostureSensorModel data)
 
 	int response = webapi::APIPostData(API_GET_URL(WEB_API_POST_POSTURE),
 			jsonPayloadData,
-			this->authKey.c_str());
+			this->settings.auth_key.c_str());
 
 	ESP_LOGI(TAG, "Posture POST Operation returned with status code %d", response);
 
@@ -104,7 +104,7 @@ bool SCDataClient::PostMotionData(MotionEventModel data)
 
 	int response = webapi::APIPostData(API_GET_URL(WEB_API_POST_MOTION),
 			jsonPayloadData,
-			this->authKey.c_str());
+			this->settings.auth_key.c_str());
 
 	ESP_LOGI(TAG, "Motion Event POST Operation returned with status code %d", response);
 
@@ -122,13 +122,14 @@ bool SCDataClient::PostOccupancyData(OccupancySessionModel data)
 		return false;
 	}
 
-	if (cJSON_AddNumberToObject(json, "ElapsedTimeMs", data.ElapsedTimeMs) == NULL)
+	if (cJSON_AddNumberToObject(json, "ElapsedTimeSeconds", data.ElapsedTimeSeconds) == NULL)
 	{
 		cJSON_Delete(json);
 		return false;
 	}
 
-	if (cJSON_AddStringToObject(json, "SitDownTime", data.SitDownTime.c_str()) == NULL)
+	// Let SitDownTime be adjusted on the server to the receive time
+	if (cJSON_AddStringToObject(json, "SitDownTime", DATETIME_MIN_VALUE.c_str()) == NULL)
 		{
 			cJSON_Delete(json);
 			return false;
@@ -139,9 +140,43 @@ bool SCDataClient::PostOccupancyData(OccupancySessionModel data)
 
 	int response = webapi::APIPostData(API_GET_URL(WEB_API_POST_OCCUPANCY),
 			jsonPayloadData,
-			this->authKey.c_str());
+			this->settings.auth_key.c_str());
 
 	ESP_LOGI(TAG, "Occupancy Session POST Operation returned with status code %d", response);
+
+	return (response == 200);
+}
+
+bool SCDataClient::PostAirQualityData(AirQualityModel data)
+{
+	cJSON* json = cJSON_CreateObject();
+
+	// for now, we are ignoring the timestamp field and substituting DateTime.MinValue
+	if (cJSON_AddStringToObject(json, "Timestamp", DATETIME_MIN_VALUE.c_str()) == NULL)
+	{
+		cJSON_Delete(json);
+		return false;
+	}
+
+	if (cJSON_AddNumberToObject(json, "CO2", data.CO2) == NULL)
+	{
+		cJSON_Delete(json);
+		return false;
+	}
+
+	if (cJSON_AddNumberToObject(json, "VOC", data.VOC) == NULL)
+	{
+		cJSON_Delete(json);
+		return false;
+	}
+
+	char* jsonPayloadData = cJSON_Print(json);
+
+	int response = webapi::APIPostData(API_GET_URL(WEB_API_POST_AIRQUALITY),
+			jsonPayloadData,
+			this->settings.auth_key.c_str());
+
+	ESP_LOGI(TAG, "Air Quality POST Operation returned with status code %d", response);
 
 	return (response == 200);
 }

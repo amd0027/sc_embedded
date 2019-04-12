@@ -8,6 +8,8 @@
 
 #include <string>
 #include <cstring>
+#include <thread>
+#include <chrono>
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -18,6 +20,7 @@
 #include <esp_event_loop.h>
 #include <esp_spi_flash.h>
 #include <esp_log.h>
+#include <esp_pthread.h>
 #include <nvs_flash.h>
 
 #include "lwip/err.h"
@@ -33,37 +36,47 @@ EventGroupHandle_t SCController::wifi_event_group;
 SCController::SCController():
 	settings(),
 	wifi(settings),
-	webserver()
+	webserver(),
+	dataClient(this->settings),
+	postureSensor(ADC1_CHANNEL_0, ADC1_CHANNEL_1, ADC1_CHANNEL_2, ADC1_CHANNEL_3, ADC1_CHANNEL_4, ADC1_CHANNEL_5),
+	heartSensor(ADC1_CHANNEL_6, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_12, 10, 10),
+	motionSensor(),
+	airQualitySensor(),
+	isOccupied(false)
 {
 }
 
 void SCController::Start()
 {
-	settings.Load();
-	InitWifi();
-	webserver.Start();
-
 	/* Print chip information */
 	esp_chip_info_t chip_info;
 	esp_chip_info(&chip_info);
-	printf("This is ESP32 chip with %d CPU cores, WiFi%s%s, ",
+	ESP_LOGI(TAG, "ESP32 chip with %d CPU cores, WiFi%s%s, ",
 			chip_info.cores,
 			(chip_info.features & CHIP_FEATURE_BT) ? "/BT" : "",
 			(chip_info.features & CHIP_FEATURE_BLE) ? "/BLE" : "");
 
-	printf("silicon revision %d, ", chip_info.revision);
+	ESP_LOGI(TAG, "ESP32 Silicon Revision %d, ", chip_info.revision);
 
-	printf("%dMB %s flash\n", spi_flash_get_chip_size() / (1024 * 1024),
+	ESP_LOGI(TAG, "Flash Size: %dMB %s", spi_flash_get_chip_size() / (1024 * 1024),
 			(chip_info.features & CHIP_FEATURE_EMB_FLASH) ? "embedded" : "external");
 
-	if (settings.auth_key.empty())
+	ESP_LOGI(TAG, "Beginning chair initialization process");
+	settings.Load();
+
+	if (!settings.auth_key.empty())
 	{
-		ESP_LOGI(TAG, "No authkey configured for this device");
+		// Before we begin to initialize the chair, check and see if it is occupied
+		// If not, return to Deep Sleep mode before Wi-Fi connects to save power
+		SamplePosture();
+		if (!isOccupied)
+		{
+			EnterDeepSleep();
+		}
 	}
-	else
-	{
-		ESP_LOGI(TAG, "The authkey configured for this device is %s", settings.auth_key.c_str());
-	}
+
+	InitWifi();
+	webserver.Start();
 
 	ESP_LOGI(TAG, "Waiting for WiFi to Connect");
     xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT, false, true, portMAX_DELAY);
@@ -71,49 +84,71 @@ void SCController::Start()
     ESP_LOGI(TAG, "Checking for available firmware update");
     SCOTAUpdate::RunUpdateCheck();
 
-    TestPostData(); // test call to verify API call with DataModels
+    if (settings.auth_key.empty())
+	{
+		ESP_LOGI(TAG, "No authkey configured for this device");
+	}
+	else
+	{
+		ESP_LOGI(TAG, "This device has been configured with an authkey");
 
-    while(1)
-    {
-    	vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
+		// Only print out the secure AuthKey for internal and debug builds
+		// No sensitive data should be logged in production builds
+#ifndef PRODUCTION_BUILD
+		ESP_LOGI(TAG, "The authkey configured for this device is %s", settings.auth_key.c_str());
+#endif
 
-	//xTaskCreate(this->ApplicationTaskImpl, "application_task", 8192, NULL, 5, NULL);
-}
+		// Since the device is configured correctly, start all sensors
+		// and allow them to POST to the server
 
-void SCController::TestPostData()
-{
-	// this is a test routine used to verify that data is being
-	// posted to the server and being mapped with the correct AuthKey
+		auto cfg = esp_pthread_get_default_config();
+		cfg.stack_size = 1024 * 6;
 
-	// This should be removed once actual data is being posted
-    SCDataClient dc(settings.auth_key);
+		cfg.thread_name = "motion_thread";
+		esp_pthread_set_cfg(&cfg);
+		motionSensorThread = std::thread(&SCController::SampleMotion, this);
 
-    HeartRateSensorModel hrsm;
-    hrsm.MeasuredBPM = 100;
-    hrsm.Timestamp = "who cares";
-    dc.PostHeartRateData(hrsm);
-    ESP_LOGI(TAG, "Finished posting heart rate junk data");
+		cfg.thread_name = "heart_thread";
+	    esp_pthread_set_cfg(&cfg);
+		heartSensorThread = std::thread(&SCController::SampleHeartRate, this);
 
-	PostureSensorModel psm;
-	psm.PostureData = 123;
-	psm.Timestamp = "who cares";
-	dc.PostPostureData(psm);
-	ESP_LOGI(TAG, "Finished posting posture junk data");
+		cfg.thread_name = "airquality_thread";
+	    esp_pthread_set_cfg(&cfg);
+		airQualitySensorThread = std::thread(&SCController::SampleAirQuality, this);
 
-	MotionEventModel mem;
-	mem.Level = 13;
-	mem.Axis = MotionEventModel::MotionAxis::X | MotionEventModel::MotionAxis::Y;
-	mem.Timestamp = "who cares";
-	dc.PostMotionData(mem);
-	ESP_LOGI(TAG, "Finished posting motion junk data");
+		// run the posture sensors on the main thread
+		while (true)
+		{
+			int postureData = SamplePosture();
 
-	OccupancySessionModel osm;
-	osm.ElapsedTimeMs = 10000;
-	osm.SitDownTime = "2019-02-11T04:30:00.000Z";
-	osm.Timestamp = "who cares";
-	dc.PostOccupancyData(osm);
-	ESP_LOGI(TAG, "Finished posting occupancy junk data");
+			// Post Posture Data
+			if (isOccupied)
+			{
+				ESP_LOGI(TAG, "Posting Posture Data");
+				PostureSensorModel postureDataModel;
+				postureDataModel.PostureData = postureData;
+				//ESP_LOGI(TAG, "Posted data was %d", postureData.PostureData);
+				bool success = dataClient.PostPostureData(postureDataModel);
+				if (!success) ESP_LOGE(TAG, "Error posting Posture data");
+			}
+
+			// Delay or Sleep
+			if (isOccupied)
+			{
+				// delay?
+			}
+			else
+			{
+				EnterDeepSleep();
+			}
+		}
+	}
+
+	while (true)
+	{
+		// endless ultra-slow loop to prevent the device from rebooting
+		vTaskDelay(100000 / portTICK_PERIOD_MS);
+	}
 }
 
 void SCController::InitWifi()
@@ -137,14 +172,163 @@ void SCController::InitWifi()
 	ESP_LOGI(TAG, "init_wifi completed");
 }
 
-/*static*/ void SCController::ApplicationTaskImpl(void* _this)
+int SCController::SamplePosture()
 {
-	static_cast<SCController*>(_this)->ApplicationTask();
+	static const int POSTURE_AVERAGING_COUNT = 5;
+	static const int POSTURE_AVERAGING_DELAY_SEC = 8;
+
+	/*---- Sample Posture Data ---------*/
+	int postureData = postureSensor.getPosture();
+	std::this_thread::sleep_for(std::chrono::seconds(POSTURE_AVERAGING_DELAY_SEC));
+	for (int i = 0; i < POSTURE_AVERAGING_COUNT-1; i++)
+	{
+		int newSample = postureSensor.getPosture();
+		postureData = SCPosture::AveragePostureSamples(postureData, newSample);
+		std::this_thread::sleep_for(std::chrono::seconds(POSTURE_AVERAGING_DELAY_SEC));
+	}
+
+	ESP_LOGI(TAG, "The averaged value is %d", postureData);
+
+	bool wasOccupied = isOccupied;
+	isOccupied = SCPosture::PredictOccupied(postureData);
+	if (isOccupied) ESP_LOGI(TAG, "The SmartChair is currently occupied");
+	else			ESP_LOGI(TAG, "The SmartChair is currently NOT occupied");
+
+	if (isOccupied && !wasOccupied)
+	{
+		// the user just sat down, begin timing the sitting session
+		gettimeofday(&occupiedBeginTime, NULL);
+	}
+	else if (!isOccupied && wasOccupied)
+	{
+		// the user just got up
+		struct timeval endTime;
+		gettimeofday(&endTime, NULL);
+
+		int elapsedSeconds = (endTime.tv_sec - occupiedBeginTime.tv_sec);
+
+		PostOccupancySession(elapsedSeconds);
+	}
+
+	return postureData;
 }
 
-void SCController::ApplicationTask()
+void SCController::SampleMotion()
 {
+	static const int MOTION_AVERAGING_DELAY_MILLISEC = 100;
 
+	SCMotionRawData lastPoint = motionSensor.SampleAccelerometer();
+	std::this_thread::sleep_for(std::chrono::milliseconds(MOTION_AVERAGING_DELAY_MILLISEC));
+
+	while (true)
+	{
+		/*---- Sample Motion Data ---------*/
+		SCMotionRawData data = motionSensor.SampleAccelerometer();
+		float pctDiffX = abs(data.x - lastPoint.x) / (float)lastPoint.x;
+		float pctDiffY = abs(data.y - lastPoint.y) / (float)lastPoint.y;
+		float pctDiffZ = abs(data.z - lastPoint.z) / (float)lastPoint.z;
+
+		if (pctDiffX > 0.60)
+		{
+			MotionEventModel motionData;
+			motionData.Axis = MotionEventModel::MotionAxis::X;
+			motionData.Level = pctDiffX * 100;
+			ESP_LOGI(TAG, "Posting motion data for X with level %d", motionData.Level);
+			bool success = dataClient.PostMotionData(motionData);
+			if (!success) ESP_LOGE(TAG, "Error posting Motion data for X");
+		}
+
+		if (pctDiffY > 0.60)
+		{
+			MotionEventModel motionData;
+			motionData.Axis = MotionEventModel::MotionAxis::Y;
+			motionData.Level = pctDiffY * 100;
+			ESP_LOGI(TAG, "Posting motion data for Y with level %d", motionData.Level);
+			ESP_LOGI(TAG, "PCT DIFF was %f", pctDiffY);
+			bool success = dataClient.PostMotionData(motionData);
+			if (!success) ESP_LOGE(TAG, "Error posting Motion data for Y");
+		}
+
+		if (pctDiffZ > 0.60)
+		{
+			MotionEventModel motionData;
+			motionData.Axis = MotionEventModel::MotionAxis::Z;
+			motionData.Level = pctDiffZ * 100;
+			ESP_LOGI(TAG, "Posting motion data for Z with level %d", motionData.Level);
+			bool success = dataClient.PostMotionData(motionData);
+			if (!success) ESP_LOGE(TAG, "Error posting Motion data for Z");
+		}
+
+		lastPoint = data;
+		std::this_thread::sleep_for(std::chrono::milliseconds(MOTION_AVERAGING_DELAY_MILLISEC));
+	}
+}
+
+void SCController::SampleHeartRate()
+{
+	int temp;
+//	/temp = heartSensor.getThreshold();
+
+	while (true)
+	{
+		ESP_LOGI(TAG, "Sampling Heart Rate Data");
+		int measuredBpm = 0; //= heartSensor.getHeartRate();
+		if (measuredBpm > 0)
+		{
+			ESP_LOGI(TAG, "Posting Heart Rate Data");
+			HeartRateSensorModel data;
+			data.MeasuredBPM = measuredBpm;
+
+			//bool success = dataClient.PostHeartRateData(data);
+			//if (!success) ESP_LOGE(TAG, "Error posting Heart Rate data");
+		}
+
+		std::this_thread::sleep_for(std::chrono::seconds(2));
+	}
+}
+
+void SCController::SampleAirQuality()
+{
+	while (true)
+	{
+		SCAirRawData airDataRaw;
+		airDataRaw = airQualitySensor.Sample();
+
+		if (airDataRaw.CO2 != 0 && airDataRaw.VOC != 0)
+		{
+			AirQualityModel data;
+					data.CO2 = airDataRaw.CO2;
+					data.VOC = airDataRaw.VOC;
+
+					ESP_LOGI(TAG, "Posting Air Quality data with CO2: %d and VOC: %d", data.CO2, data.VOC);
+					bool success = dataClient.PostAirQualityData(data);
+					if (!success) ESP_LOGE(TAG, "Error posting Air Quality data");
+		}
+
+		std::this_thread::sleep_for(std::chrono::minutes(5));
+	}
+}
+
+void SCController::PostOccupancySession(int elapsedSeconds)
+{
+	ESP_LOGI(TAG, "Posting Occupancy Session Data");
+	OccupancySessionModel dataModel;
+	dataModel.ElapsedTimeSeconds = elapsedSeconds;
+	ESP_LOGI(TAG, "Posted data was %d seconds", elapsedSeconds);
+	bool success = dataClient.PostOccupancyData(dataModel);
+	if (!success) ESP_LOGE(TAG, "Error posting Occupancy data");
+}
+
+void SCController::EnterDeepSleep()
+{
+	ESP_LOGI(TAG, "Entering Deep Sleep Mode....");
+
+	esp_wifi_stop();
+
+    const int deepSleepMinutes = 5;
+    int deepSleepSec = deepSleepMinutes * 60;
+    ESP_LOGI(TAG, "Entering deep sleep for %d seconds", deepSleepSec);
+    esp_deep_sleep(1000000LL * deepSleepSec);
 }
 
 /*static*/ esp_err_t SCController::event_handler(void *ctx, system_event_t *event)

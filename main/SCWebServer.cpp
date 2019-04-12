@@ -32,7 +32,8 @@ extern "C"
 #include "api/SCPairing.h"
 
 SCWebServer::SCWebServer():
-		server(NULL)
+		server(NULL),
+		nonsecureServer(NULL)
 {
 }
 
@@ -121,7 +122,7 @@ esp_err_t pairing_handler(httpd_req_t *req)
 
 	if (!config.auth_key.empty())
 	{
-		httpd_resp_set_hdr(req, "Location", "/done.html?err=This%20Chair%20Is%20Already%20Paired");
+		httpd_resp_set_hdr(req, "Location", "/done.html?err=This%20Chair%20Is%20Already%20Paired&reboot=true");
 		httpd_resp_set_status(req, "302");
 		httpd_resp_send(req, "", 0);
 
@@ -145,7 +146,7 @@ esp_err_t pairing_handler(httpd_req_t *req)
 		config.auth_key = pairing.GetAuthKey();
 		config.Save();
 
-		httpd_resp_set_hdr(req, "Location", "/done.html?err=Pairing%20Completed%20Successfully");
+		httpd_resp_set_hdr(req, "Location", "/done.html?err=Pairing%20Completed%20Successfully&reboot=true");
 		httpd_resp_set_status(req, "302");
 		httpd_resp_send(req, "", 0);
 	}
@@ -336,6 +337,26 @@ const httpd_uri_t setfactoryreset = {
     .user_ctx = NULL
 };
 
+esp_err_t setreboot_post_handler(httpd_req_t *req)
+{
+	httpd_resp_set_hdr(req, "Location", "https://uahsmartchair.com");
+	httpd_resp_set_status(req, "302");
+	httpd_resp_send(req, "", 0);
+
+	vTaskDelay(1000 / portTICK_PERIOD_MS);
+
+	esp_restart();
+
+    return ESP_OK;
+}
+
+const httpd_uri_t setreboot = {
+    .uri       = "/setreboot",
+    .method   = HTTP_POST,
+    .handler  = setreboot_post_handler,
+    .user_ctx = NULL
+};
+
 const httpd_uri_t root = {
     .uri       = "/",
     .method    = HTTP_GET,
@@ -407,7 +428,7 @@ void SCWebServer::Start()
     conf.httpd.server_port        = 0;
     conf.httpd.ctrl_port          = 32768;
     conf.httpd.max_open_sockets   = 4;
-    conf.httpd.max_uri_handlers   = 12;
+    conf.httpd.max_uri_handlers   = 13;
     conf.httpd.max_resp_headers   = 8;
     conf.httpd.backlog_conn       = 5;
     conf.httpd.lru_purge_enable   = true;
@@ -461,6 +482,7 @@ void SCWebServer::Start()
     httpd_register_uri_handler(server, &css_pure_min);
 
     httpd_register_uri_handler(server, &setnetwork);
+    httpd_register_uri_handler(server, &setreboot);
     httpd_register_uri_handler(server, &setfactoryreset);
 
     // initialize the HTTP web server (and set it to redirect to the HTTPs version)

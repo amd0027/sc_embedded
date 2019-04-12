@@ -20,7 +20,7 @@ struct SCMotionRawData
 class SCMotion {
 public:
 	SCMotion();
-	SCMotionRawData Sample();
+	SCMotionRawData SampleAccelerometer();
 
 private:
 	SCDriverI2C i2c = SCDriverI2C(0);

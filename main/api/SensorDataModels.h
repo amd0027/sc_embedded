@@ -23,7 +23,7 @@ class OccupancySessionModel
 public:
 	std::string Timestamp;
 	std::string SitDownTime;
-	uint32_t ElapsedTimeMs;
+	uint32_t ElapsedTimeSeconds;
 };
 
 class MotionEventModel
@@ -42,6 +42,15 @@ public:
 
 	uint16_t Axis;
 	uint16_t Level;
+};
+
+class AirQualityModel
+{
+public:
+	std::string Timestamp;
+
+	int CO2;
+	int VOC;
 };
 
 #endif /*SENSORDATAMODELS_H_*/

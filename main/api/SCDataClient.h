@@ -10,20 +10,23 @@
 
 #include <string>
 
+#include "../SCSettings.h"
 #include "SensorDataModels.h"
 
 class SCDataClient {
 public:
-	SCDataClient(std::string key);
+	SCDataClient(SCSettings& settings);
 	bool PostHeartRateData(HeartRateSensorModel data);
 	bool PostPostureData(PostureSensorModel data);
 	bool PostMotionData(MotionEventModel data);
 	bool PostOccupancyData(OccupancySessionModel data);
+	bool PostAirQualityData(AirQualityModel data);
+
 
 private:
 	static const std::string DATETIME_MIN_VALUE;
 	static const constexpr char* TAG = "SCDataClient";
-	std::string authKey;
+	SCSettings& settings;
 };
 
 #endif /* SCDATACLIENT_H_ */

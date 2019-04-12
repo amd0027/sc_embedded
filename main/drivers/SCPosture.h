@@ -20,6 +20,9 @@ public:
 
 	int getPosture();
 
+	static int AveragePostureSamples(int sample1, int sample2);
+	static bool PredictOccupied(int sample);
+
 private:
 	SCDriverADC s[6];
 };
