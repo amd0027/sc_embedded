@@ -266,6 +266,9 @@ void SCController::SampleMotion()
 
 void SCController::SampleHeartRate()
 {
+	int temp;
+//	/temp = heartSensor.getThreshold();
+
 	while (true)
 	{
 		ESP_LOGI(TAG, "Sampling Heart Rate Data");
@@ -290,17 +293,19 @@ void SCController::SampleAirQuality()
 	{
 		SCAirRawData airDataRaw;
 		airDataRaw = airQualitySensor.Sample();
-		printf("AQS: %7d c %7d v\n", airDataRaw.CO2, airDataRaw.VOC);
 
-		AirQualityModel data;
-		data.CO2 = airDataRaw.CO2;
-		data.VOC = airDataRaw.VOC;
+		if (airDataRaw.CO2 != 0 && airDataRaw.VOC != 0)
+		{
+			AirQualityModel data;
+					data.CO2 = airDataRaw.CO2;
+					data.VOC = airDataRaw.VOC;
 
-		ESP_LOGI(TAG, "Posting Air Quality data with CO2: %d and VOC: %d", data.CO2, data.VOC);
-		bool success = dataClient.PostAirQualityData(data);
-		if (!success) ESP_LOGE(TAG, "Error posting Air Quality data");
+					ESP_LOGI(TAG, "Posting Air Quality data with CO2: %d and VOC: %d", data.CO2, data.VOC);
+					bool success = dataClient.PostAirQualityData(data);
+					if (!success) ESP_LOGE(TAG, "Error posting Air Quality data");
+		}
 
-		std::this_thread::sleep_for(std::chrono::seconds(10));
+		std::this_thread::sleep_for(std::chrono::minutes(5));
 	}
 }
 
