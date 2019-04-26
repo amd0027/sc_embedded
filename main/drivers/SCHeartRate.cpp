@@ -19,6 +19,8 @@ SCHeartRate::SCHeartRate(adc1_channel_t channel, adc_atten_t atten, adc_bits_wid
 int SCHeartRate::getThreshold()
 {
 	int count = sample_period*1000/sample_rate;
+	// Only use half of a sampling period to obtain threshold
+	count = count / 2;
 	uint32_t reading;
 	long int sum = 0;
 	for (int i = 0; i < count; i++)
@@ -29,6 +31,7 @@ int SCHeartRate::getThreshold()
 		vTaskDelay(pdMS_TO_TICKS(sample_rate));
 	}
 	threshold = sum/count + THRESHOLD_OFFSET;
+	printf("\nHeartrate threshold found: %d\n", threshold);
 	return threshold;
 }
 
@@ -62,6 +65,18 @@ int SCHeartRate::getHeartRate()
 
 		vTaskDelay(pdMS_TO_TICKS(sample_rate));
 	}
+	/*
+	 * Compare that number of beats fall within required range.
+	 * HR/60 => beats we would expect to see every second
+	 * Beats/second * sample_period => beats we would expect to see each period
+	 * Perform multiplication first to avoid integer division frustrations
+	 */
+	if (beats < ((MIN_HR*sample_period)/60) or beats > ((MAX_HR*sample_period)/60))
+	{
+		// printf("Measured heartrate out of range!\n");
+		return 0;
+	}
+	// printf("Sampling heart rate: %d beats detected\n", beats);
 	// Calculate average by dividing by number of intermediate beats
 	average_period = average_period / (beats - 1);
 	/*

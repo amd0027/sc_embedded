@@ -131,12 +131,6 @@ void SCController::Start()
 				bool success = dataClient.PostPostureData(postureDataModel);
 				if (!success) ESP_LOGE(TAG, "Error posting Posture data");
 			}
-
-			// Delay or Sleep
-			if (isOccupied)
-			{
-				// delay?
-			}
 			else
 			{
 				EnterDeepSleep();
@@ -266,24 +260,49 @@ void SCController::SampleMotion()
 
 void SCController::SampleHeartRate()
 {
-	int temp;
-//	/temp = heartSensor.getThreshold();
-
+	bool readyYet = false;
 	while (true)
 	{
-		ESP_LOGI(TAG, "Sampling Heart Rate Data");
-		int measuredBpm = 0; //= heartSensor.getHeartRate();
-		if (measuredBpm > 0)
+		int thresh;
+		int measuredBpm = 0;
+		thresh = heartSensor.getThreshold();
+		if (thresh == 0)
 		{
-			ESP_LOGI(TAG, "Posting Heart Rate Data");
-			HeartRateSensorModel data;
-			data.MeasuredBPM = measuredBpm;
-
-			//bool success = dataClient.PostHeartRateData(data);
-			//if (!success) ESP_LOGE(TAG, "Error posting Heart Rate data");
+			ESP_LOGI(TAG, "HeartRate sensor failed to get threshold %d", thresh);
+		}
+		else
+		{
+			measuredBpm = heartSensor.getHeartRate();
 		}
 
-		std::this_thread::sleep_for(std::chrono::seconds(2));
+		ESP_LOGI(TAG, "Sampling Heart Rate Data, got %d", measuredBpm);
+		if (measuredBpm > 0)
+		{
+			if (readyYet)
+			{
+				// Post the data if we get a non-zero heart rate, and a full sampling period has elapsed
+				ESP_LOGI(TAG, "Posting Heart Rate Data");
+				HeartRateSensorModel data;
+				data.MeasuredBPM = measuredBpm;
+
+				bool success = dataClient.PostHeartRateData(data);
+				if (!success) ESP_LOGE(TAG, "Error posting Heart Rate data");
+			}
+			else
+			{
+				// ignore this sample, and send results next full period
+				ESP_LOGI(TAG, "Heart rate ready");
+				readyYet = true;
+			}
+		}
+		else
+		{
+			// no finger detected, start over
+			ESP_LOGI(TAG, "Heart rate not ready yet");
+			readyYet = false;
+		}
+
+		std::this_thread::sleep_for(std::chrono::milliseconds(500));
 	}
 }
 
